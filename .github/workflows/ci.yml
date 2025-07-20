@@ -39,14 +39,65 @@ jobs:
         name: Start services
         run: docker compose up --wait --no-build
       -
+        name: Services diagnostic
+        run: |
+          echo "=== Docker Compose Services Status ==="
+          docker compose ps
+          echo "=== Docker Compose Logs ==="
+          docker compose logs --tail=50
+          echo "=== Network connectivity test ==="
+          docker compose exec -T php curl -f http://localhost:2019/metrics || echo "Caddy metrics not available"
+          docker compose exec -T pwa wget -qO- http://localhost:3000 > /dev/null && echo "PWA responding" || echo "PWA not responding"
+      -
+        name: Wait for services to be fully ready
+        run: |
+          echo "Waiting additional time for services to stabilize..."
+          sleep 10
+      -
         name: Check HTTP reachability
-        run: curl -v --fail-with-body http://localhost
+        run: |
+          for i in {1..5}; do
+            if curl -v --fail-with-body http://localhost; then
+              echo "HTTP check successful"
+              break
+            elif [ $i -eq 5 ]; then
+              echo "HTTP check failed after 5 attempts"
+              exit 1
+            else
+              echo "HTTP check attempt $i failed, retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
       -
         name: Check API reachability
-        run: curl -vk --fail-with-body https://localhost
+        run: |
+          for i in {1..5}; do
+            if curl -vk --fail-with-body https://localhost; then
+              echo "API check successful"
+              break
+            elif [ $i -eq 5 ]; then
+              echo "API check failed after 5 attempts"
+              exit 1
+            else
+              echo "API check attempt $i failed, retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
       -
         name: Check PWA reachability
-        run: "curl -vk --fail-with-body -H 'Accept: text/html' https://localhost"
+        run: |
+          for i in {1..5}; do
+            if curl -vk --fail-with-body -H 'Accept: text/html' https://localhost; then
+              echo "PWA check successful"
+              break
+            elif [ $i -eq 5 ]; then
+              echo "PWA check failed after 5 attempts"
+              exit 1
+            else
+              echo "PWA check attempt $i failed, retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
       -
         name: Create test database
         run: docker compose exec -T php bin/console -e test doctrine:database:create

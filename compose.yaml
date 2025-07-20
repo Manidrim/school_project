@@ -2,7 +2,10 @@ services:
   php:
     image: ${IMAGES_PREFIX:-}app-php
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+      pwa:
+        condition: service_healthy
     restart: unless-stopped
     environment:
       PWA_UPSTREAM: pwa:3000
@@ -35,11 +38,23 @@ services:
       - target: 443
         published: ${HTTP3_PORT:-443}
         protocol: udp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/docs.jsonld"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
 
   pwa:
     image: ${IMAGES_PREFIX:-}app-pwa
     environment:
       NEXT_PUBLIC_ENTRYPOINT: http://php
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
 
 ###> doctrine/doctrine-bundle ###
   database:
@@ -53,6 +68,11 @@ services:
       - db_data:/var/lib/postgresql/data
       # you may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
       # - ./api/docker/db/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-app}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 ###< doctrine/doctrine-bundle ###
 
 # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service

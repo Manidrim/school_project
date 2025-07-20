@@ -27,6 +27,9 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # Development image
 FROM base as dev
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME localhost
