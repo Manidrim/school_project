@@ -28,7 +28,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 FROM base as dev
 
 # Install wget for health checks
-RUN apk add --no-cache wget=1.21.4-r0
+RUN apk add --no-cache wget=1.25.0-r1
 
 EXPOSE 3000
 ENV PORT 3000
