@@ -17,13 +17,14 @@ security:
 
         api:
             pattern: ^/api
-            stateless: false
+            stateless: true
             provider: app_user_provider
             entry_point: App\Security\ApiAuthenticationEntryPoint
 
         main:
             lazy: true
             provider: app_user_provider
+            pattern: ^/
             form_login:
                 login_path: app_login
                 check_path: app_login

@@ -40,6 +40,12 @@ class AuthenticationTest extends WebTestCase
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+        
+        $this->entityManager->clear();
+        
+        $createdUser = $this->entityManager->getRepository(User::class)
+            ->findOneByEmail('admin@test.com');
+        $this->assertNotNull($createdUser, 'Test user was not created successfully');
     }
 
     public function testLoginPageIsAccessible(): void
@@ -61,7 +67,13 @@ class AuthenticationTest extends WebTestCase
         
         $this->client->submit($form);
         
-        $this->assertResponseRedirects('/admin');
+        $response = $this->client->getResponse();
+        if ($response->isRedirect()) {
+            $location = $response->headers->get('location');
+            $this->assertEquals('/admin', $location, 'Expected redirect to /admin but got: ' . $location);
+        } else {
+            $this->fail('Expected redirect response but got status: ' . $response->getStatusCode());
+        }
     }
 
     public function testInvalidLoginShowsError(): void
@@ -88,13 +100,22 @@ class AuthenticationTest extends WebTestCase
 
     public function testAuthenticatedUserCanAccessAdmin(): void
     {
-        $this->loginUser();
+        $crawler = $this->client->request('GET', '/login');
+        
+        $form = $crawler->selectButton('Sign in')->form([
+            'email' => 'admin@test.com',
+            'password' => 'admin123',
+        ]);
+        
+        $this->client->submit($form);
+        $this->client->followRedirect();
         
         $this->client->request('GET', '/admin');
         
         $this->assertResponseIsSuccessful();
         $this->assertSelectorTextContains('h1', 'Admin Dashboard');
     }
+
 
     public function testLogoutRedirectsToLogin(): void
     {
