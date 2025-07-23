@@ -13,6 +13,41 @@
 
 {$CADDY_EXTRA_CONFIG}
 
+# HTTP-only config for development API access
+http://localhost:8080 {
+	log {
+		format filter {
+			wrap console
+			fields {
+				uri query {
+					replace authorization REDACTED
+				}
+			}
+		}
+	}
+
+	root * /app/public
+	encode {
+		zstd
+		br
+		gzip
+
+		match {
+			header Content-Type text/*
+			header Content-Type application/json*
+			header Content-Type application/javascript*
+			header Content-Type application/xhtml+xml*
+			header Content-Type application/atom+xml*
+			header Content-Type application/rss+xml*
+			header Content-Type image/svg+xml*
+			# Custom formats supported
+			header Content-Type application/ld+json*
+		}
+	}
+
+	php_server
+}
+
 {$SERVER_NAME:localhost} {
 	log {
 		# Redact the authorization query parameter that can be set by Mercure
