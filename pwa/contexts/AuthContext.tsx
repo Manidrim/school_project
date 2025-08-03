@@ -14,7 +14,7 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: new URLSearchParams({
           email,
           password,
-          _token: csrfToken,
+          _csrf_token: csrfToken,
         }),
       });
 
@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         credentials: 'include',
       });
       const html = await response.text();
-      const match = html.match(/name="_token"\s+value="([^"]+)"/);
+      const match = html.match(/name="_csrf_token"\s+value="([^"]+)"/);
       return match ? match[1] : '';
     } catch {
       return '';

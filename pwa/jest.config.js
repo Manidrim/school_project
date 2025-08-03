@@ -8,7 +8,7 @@ const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
   collectCoverage: true,
@@ -22,15 +22,16 @@ const customJestConfig = {
     '!pages/_document.tsx',
     '!pages/login 2.tsx',
     '!contexts/AuthContext 2.tsx',
+    '!**/__tests__/**',
     '!**/*.d.ts',
     '!**/node_modules/**',
   ],
   coverageThreshold: {
     global: {
-      branches: 85,
-      functions: 85,
-      lines: 85,
-      statements: 85,
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100,
     },
   },
 }
