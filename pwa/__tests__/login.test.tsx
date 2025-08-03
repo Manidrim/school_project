@@ -4,8 +4,16 @@ import Login from '../pages/login'
 import { mockPush } from '../jest.setup'
 import { MockAuthProvider } from './test-utils'
 
-const MockedLogin = (authContextValue = {}) => (
-  <MockAuthProvider value={authContextValue}>
+interface MockedLoginProps {
+  user?: { email: string; roles: string[] } | null;
+  login?: jest.Mock;
+  loading?: boolean;
+  logout?: jest.Mock;
+  checkAuth?: jest.Mock;
+}
+
+const MockedLogin: React.FC<MockedLoginProps> = (props) => (
+  <MockAuthProvider value={props}>
     <Login />
   </MockAuthProvider>
 )

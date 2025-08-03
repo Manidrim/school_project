@@ -95,7 +95,19 @@ test-no-skip: ## Verify no tests are skipped in the entire test suite
 
 coverage-check: test-coverage-check ## Verify 100% test coverage for all code (frontend temporarily disabled)
 
-fix: fix-php fix-frontend lint-php test-no-skip coverage-check ## ZERO TOLERANCE: Fix ALL issues, run ALL linters, NO deprecated/warnings/errors allowed
+check-deprecations: ## Check for deprecation warnings and fail if any non-framework ones are found
+	@echo "🔍 Checking for deprecation warnings..."
+	@DEPRECATIONS=$$(docker compose exec -T -e XDEBUG_MODE=coverage php bin/phpunit --coverage-clover var/coverage/clover.xml 2>&1 | grep -i "deprecation\|deprecated" | grep -v -E "(doctrine/doctrine-bundle|JsonSchema.*TypeFactoryInterface|controller resolver automapping|Other deprecation notices)" || true); \
+	if [ -n "$$DEPRECATIONS" ]; then \
+		echo "❌ Application deprecation warnings found!"; \
+		echo "$$DEPRECATIONS"; \
+		echo "Please fix all deprecation warnings before proceeding."; \
+		exit 1; \
+	else \
+		echo "✅ No application deprecation warnings found (framework deprecations ignored)"; \
+	fi
+
+fix: fix-php fix-frontend lint-php test-no-skip coverage-check check-deprecations ## ZERO TOLERANCE: Fix ALL issues, run ALL linters, NO deprecated/warnings/errors allowed
 
 fix-with-integration: fix test-integration ## Complete fix including integration tests validation
 
@@ -107,4 +119,4 @@ check-status: ## Quick status check (essential tools only)
 	@docker compose exec -T pwa pnpm lint | head -5
 	@echo "✅ Use 'make fix' for complete validation"
 
-.PHONY: lint-php-cs lint-phpstan lint-phpmd lint-phpcs lint-deptrac lint-eslint lint-eslint-fix lint-hadolint lint-php lint-frontend lint-docker lint fix-php fix-frontend fix test test-coverage test-coverage-check test-frontend test-frontend-coverage test-frontend-coverage-check coverage-check
+.PHONY: lint-php-cs lint-phpstan lint-phpmd lint-phpcs lint-deptrac lint-eslint lint-eslint-fix lint-hadolint lint-php lint-frontend lint-docker lint fix-php fix-frontend fix test test-coverage test-coverage-check test-frontend test-frontend-coverage test-frontend-coverage-check coverage-check check-deprecations
