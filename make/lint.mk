@@ -107,7 +107,35 @@ check-deprecations: ## Check for deprecation warnings and fail if any non-framew
 		echo "✅ No application deprecation warnings found (framework deprecations ignored)"; \
 	fi
 
-fix: fix-php fix-frontend lint-php test-no-skip coverage-check check-deprecations ## ZERO TOLERANCE: Fix ALL issues, run ALL linters, NO deprecated/warnings/errors allowed
+health-check: ## Verify services health (same as CI integration tests)
+	@echo "🔍 Running system health checks..."
+	@for i in 1 2 3; do \
+		if curl -f http://localhost/api/greetings --max-time 10 --silent; then \
+			echo "✅ API is responding"; \
+			break; \
+		elif [ $$i -eq 3 ]; then \
+			echo "❌ API health check failed after 3 attempts"; \
+			exit 1; \
+		else \
+			echo "⏳ API check attempt $$i failed, retrying..."; \
+			sleep 5; \
+		fi; \
+	done
+	@for i in 1 2 3; do \
+		if curl -f http://localhost:3000 --max-time 10 --silent; then \
+			echo "✅ PWA is responding"; \
+			break; \
+		elif [ $$i -eq 3 ]; then \
+			echo "❌ PWA health check failed after 3 attempts"; \
+			exit 1; \
+		else \
+			echo "⏳ PWA check attempt $$i failed, retrying..."; \
+			sleep 5; \
+		fi; \
+	done
+	@echo "✅ All health checks passed"
+
+fix: fix-php fix-frontend lint-php test-no-skip coverage-check check-deprecations health-check ## ZERO TOLERANCE: Fix ALL issues, run ALL linters, NO deprecated/warnings/errors allowed
 
 fix-with-integration: fix test-integration ## Complete fix including integration tests validation
 
@@ -119,4 +147,4 @@ check-status: ## Quick status check (essential tools only)
 	@docker compose exec -T pwa pnpm lint | head -5
 	@echo "✅ Use 'make fix' for complete validation"
 
-.PHONY: lint-php-cs lint-phpstan lint-phpmd lint-phpcs lint-deptrac lint-eslint lint-eslint-fix lint-hadolint lint-php lint-frontend lint-docker lint fix-php fix-frontend fix test test-coverage test-coverage-check test-frontend test-frontend-coverage test-frontend-coverage-check coverage-check check-deprecations
+.PHONY: lint-php-cs lint-phpstan lint-phpmd lint-phpcs lint-deptrac lint-eslint lint-eslint-fix lint-hadolint lint-php lint-frontend lint-docker lint fix-php fix-frontend fix test test-coverage test-coverage-check test-frontend test-frontend-coverage test-frontend-coverage-check coverage-check check-deprecations health-check
