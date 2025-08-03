@@ -22,6 +22,8 @@ env:
 jobs:
   lint-docker:
     name: Docker Linting
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || contains(github.event.pull_request.changed_files.*.filename, 'Dockerfile') || contains(github.event.pull_request.changed_files.*.filename, 'compose')
     steps:
