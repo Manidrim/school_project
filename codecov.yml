@@ -1,0 +1,67 @@
+codecov:
+  require_ci_to_pass: true
+  notify:
+    after_n_builds: 2
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  status:
+    project:
+      default:
+        target: 100%
+        threshold: 1%
+        if_no_uploads: error
+    patch:
+      default:
+        target: 100%
+        threshold: 1%
+        if_no_uploads: error
+
+flag_management:
+  default_rules:
+    carryforward: true
+    carryforward_mode: "labels"
+
+flags:
+  php:
+    paths:
+      - api/src/
+    carryforward: true
+  frontend:
+    paths:
+      - pwa/pages/
+      - pwa/components/
+      - pwa/contexts/
+    carryforward: true
+
+github_checks:
+  annotations: true
+
+comment:
+  layout: "header, diff, flags, components, footer"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+  branches:
+    - main
+    - develop
+
+ignore:
+  - "**/*.test.tsx"
+  - "**/*.test.ts"
+  - "**/*.test.php"
+  - "**/tests/**"
+  - "**/__tests__/**"
+  - "**/Test.php"
+  - "**/TestCase.php"
+  - "api/bin/**"
+  - "api/config/**"
+  - "api/migrations/**"
+  - "api/var/**"
+  - "api/vendor/**"
+  - "pwa/.next/**"
+  - "pwa/node_modules/**"
+  - "pwa/coverage/**"

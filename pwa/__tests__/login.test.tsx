@@ -1,13 +1,21 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AuthProvider } from '../contexts/AuthContext'
 import Login from '../pages/login'
 import { mockPush } from '../jest.setup'
+import { MockAuthProvider } from './test-utils'
 
-const MockedLogin = () => (
-  <AuthProvider>
+interface MockedLoginProps {
+  user?: { email: string; roles: string[] } | null;
+  login?: jest.Mock;
+  loading?: boolean;
+  logout?: jest.Mock;
+  checkAuth?: jest.Mock;
+}
+
+const MockedLogin: React.FC<MockedLoginProps> = (props) => (
+  <MockAuthProvider value={props}>
     <Login />
-  </AuthProvider>
+  </MockAuthProvider>
 )
 
 describe('Login Page', () => {
@@ -25,6 +33,37 @@ describe('Login Page', () => {
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
 
+  it('renders login page content', () => {
+    render(<MockedLogin />)
+    // Verify login page content is rendered
+    expect(screen.getByText('Sign in to admin panel')).toBeInTheDocument()
+  })
+
+  it('redirects authenticated user to admin', async () => {
+    const mockUser = { email: 'test@example.com', roles: ['ROLE_ADMIN'] }
+    
+    render(<MockedLogin user={mockUser} />)
+    
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/admin')
+    })
+  })
+
+  it('handles input changes', async () => {
+    const user = userEvent.setup()
+    
+    render(<MockedLogin />)
+    
+    const emailInput = screen.getByPlaceholderText('Email address')
+    const passwordInput = screen.getByPlaceholderText('Password')
+    
+    await user.type(emailInput, 'test@example.com')
+    await user.type(passwordInput, 'password123')
+    
+    expect(emailInput).toHaveValue('test@example.com')
+    expect(passwordInput).toHaveValue('password123')
+  })
+
   it('shows validation errors for empty fields', async () => {
     const user = userEvent.setup()
     render(<MockedLogin />)
@@ -37,52 +76,45 @@ describe('Login Page', () => {
 
   it('handles successful login', async () => {
     const user = userEvent.setup()
+    const mockLogin = jest.fn().mockResolvedValue(true)
     
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve('<input name="_csrf_token" value="test-token" />'),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-      })
-
-    render(<MockedLogin />)
+    await act(async () => {
+      render(<MockedLogin login={mockLogin} user={null} />)
+    })
     
     const emailInput = screen.getByPlaceholderText('Email address')
     const passwordInput = screen.getByPlaceholderText('Password')
     const submitButton = screen.getByRole('button', { name: /sign in/i })
     
-    await user.type(emailInput, 'admin@test.com')
-    await user.type(passwordInput, 'password123')
-    await user.click(submitButton)
+    await act(async () => {
+      await user.type(emailInput, 'admin@test.com')
+      await user.type(passwordInput, 'password123')
+      await user.click(submitButton)
+    })
     
     await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith('admin@test.com', 'password123')
       expect(mockPush).toHaveBeenCalledWith('/admin')
     })
   })
 
   it('shows error message on failed login', async () => {
     const user = userEvent.setup()
+    const mockLogin = jest.fn().mockResolvedValue(false)
     
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve('<input name="_csrf_token" value="test-token" />'),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-      })
-
-    render(<MockedLogin />)
+    await act(async () => {
+      render(<MockedLogin login={mockLogin} user={null} />)
+    })
     
     const emailInput = screen.getByPlaceholderText('Email address')
     const passwordInput = screen.getByPlaceholderText('Password')
     const submitButton = screen.getByRole('button', { name: /sign in/i })
     
-    await user.type(emailInput, 'admin@test.com')
-    await user.type(passwordInput, 'wrongpassword')
-    await user.click(submitButton)
+    await act(async () => {
+      await user.type(emailInput, 'admin@test.com')
+      await user.type(passwordInput, 'wrongpassword')
+      await user.click(submitButton)
+    })
     
     await waitFor(() => {
       expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
@@ -91,24 +123,32 @@ describe('Login Page', () => {
 
   it('shows loading state during login', async () => {
     const user = userEvent.setup()
+    let resolveLogin: (value: boolean) => void
+    const mockLogin = jest.fn().mockImplementation(() => new Promise(resolve => {
+      resolveLogin = resolve
+    }))
     
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        text: () => Promise.resolve('<input name="_csrf_token" value="test-token" />'),
-      })
-      .mockImplementationOnce(() => new Promise(resolve => setTimeout(resolve, 100)))
-
-    render(<MockedLogin />)
+    await act(async () => {
+      render(<MockedLogin login={mockLogin} user={null} />)
+    })
     
     const emailInput = screen.getByPlaceholderText('Email address')
     const passwordInput = screen.getByPlaceholderText('Password')
     const submitButton = screen.getByRole('button', { name: /sign in/i })
     
-    await user.type(emailInput, 'admin@test.com')
-    await user.type(passwordInput, 'password123')
-    await user.click(submitButton)
+    await act(async () => {
+      await user.type(emailInput, 'admin@test.com')
+      await user.type(passwordInput, 'password123')
+    })
+    
+    await act(async () => {
+      await user.click(submitButton)
+    })
     
     expect(screen.getByText('Signing in...')).toBeInTheDocument()
+    
+    await act(async () => {
+      resolveLogin!(true)
+    })
   })
 }) 

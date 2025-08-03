@@ -21,3 +21,8 @@ api_platform:
     # change this to true if you use controllers
     use_symfony_listeners: false
     keep_legacy_inflector: false
+    # Disable deprecated parameter validation to prevent deprecation warnings
+    validator:
+        query_parameter_validation: false
+    # Disable deprecated JsonSchema TypeFactory to prevent deprecation warnings
+    use_deprecated_json_schema_type_factory: false
