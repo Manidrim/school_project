@@ -1,14 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Api;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 
-class GreetingsTest extends ApiTestCase
+/**
+ * @internal
+ *
+ * @covers \App\Entity\Greeting
+ */
+final class GreetingsTest extends ApiTestCase
 {
     public function testCreateGreeting(): void
     {
-        static::createClient()->request('POST', '/greetings', [
+        self::createClient()->request('POST', '/greetings', [
             'json' => [
                 'name' => 'Kévin',
             ],

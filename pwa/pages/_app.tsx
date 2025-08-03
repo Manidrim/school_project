@@ -4,7 +4,7 @@ import { AuthProvider } from "../contexts/AuthContext"
 import type { AppProps } from "next/app"
 import type { DehydratedState } from "react-query"
 
-function MyApp({ Component, pageProps }: AppProps<{dehydratedState: DehydratedState}>) {
+function MyApp({ Component, pageProps }: AppProps<{dehydratedState: DehydratedState}>): JSX.Element {
   return (
     <AuthProvider>
       <Layout dehydratedState={pageProps.dehydratedState}>

@@ -1,5 +1,6 @@
 include make/docker.mk
 include make/symfony.mk
+include make/lint.mk
 
 .DEFAULT_GOAL := help
 

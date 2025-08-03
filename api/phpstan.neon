@@ -1,0 +1,19 @@
+parameters:
+    level: 9
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - var/*
+        - vendor/*
+    symfony:
+        containerXmlPath: '%rootDir%/../../../var/cache/dev/App_KernelDevDebugContainer.xml'
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+    ignoreErrors:
+        -
+            identifier: missingType.generics
+
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
