@@ -53,9 +53,51 @@ fix-php: lint-php-cs ## Fix all auto-fixable PHP issues
 
 fix-frontend: lint-eslint-fix ## Fix all auto-fixable frontend issues
 
+test-integration: ## Run all integration tests (API + Frontend)
+	docker compose exec -T php bin/phpunit tests/Api/
+	@echo "🔍 Checking for frontend integration tests..."
+	@if [ $$(docker compose exec -T pwa find __tests__ -name "*.test.tsx" -exec grep -l "integration\|e2e" {} \; 2>/dev/null | wc -l) -gt 0 ]; then \
+		echo "✅ Running frontend integration tests..."; \
+		docker compose exec -T pwa pnpm test -- --testPathPattern="integration|e2e"; \
+	else \
+		echo "ℹ️ No dedicated frontend integration tests found - running all frontend tests as integration validation"; \
+		docker compose exec -T pwa pnpm test; \
+	fi
+
+test-integration-api: ## Run API integration tests only
+	docker compose exec -T php bin/phpunit tests/Api/
+
+test-integration-frontend: ## Run frontend integration tests only  
+	@echo "🔍 Checking for frontend integration tests..."
+	@if [ $$(docker compose exec -T pwa find __tests__ -name "*.test.tsx" -exec grep -l "integration\|e2e" {} \; 2>/dev/null | wc -l) -gt 0 ]; then \
+		echo "✅ Running frontend integration tests..."; \
+		docker compose exec -T pwa pnpm test -- --testPathPattern="integration|e2e"; \
+	else \
+		echo "ℹ️ No dedicated frontend integration tests found - running all frontend tests as integration validation"; \
+		docker compose exec -T pwa pnpm test; \
+	fi
+
+test-no-skip: ## Verify no tests are skipped in the entire test suite
+	@echo "🔍 Checking for skipped tests..."
+	@if docker compose exec -T php bin/phpunit --dry-run | grep -i "skipped\|todo"; then \
+		echo "❌ Found skipped PHP tests!"; \
+		exit 1; \
+	else \
+		echo "✅ No skipped PHP tests found"; \
+	fi
+	@if docker compose exec -T pwa pnpm test --passWithNoTests --verbose 2>&1 | grep -i "skip\|todo\|pending"; then \
+		echo "❌ Found skipped frontend tests!"; \
+		exit 1; \
+	else \
+		echo "✅ No skipped frontend tests found"; \
+	fi
+	@echo "✅ All tests are active - no skipped tests detected"
+
 coverage-check: test-coverage-check ## Verify 100% test coverage for all code (frontend temporarily disabled)
 
-fix: fix-php fix-frontend lint-php coverage-check ## ZERO TOLERANCE: Fix ALL issues, run ALL linters, NO deprecated/warnings/errors allowed
+fix: fix-php fix-frontend lint-php test-no-skip coverage-check ## ZERO TOLERANCE: Fix ALL issues, run ALL linters, NO deprecated/warnings/errors allowed
+
+fix-with-integration: fix test-integration ## Complete fix including integration tests validation
 
 fix-complete: fix lint-hadolint test-frontend ## Complete validation including environment-specific tools (Docker linting + frontend tests)
 
