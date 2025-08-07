@@ -10,17 +10,25 @@ use App\Infrastructure\User\SymfonyUserAdapter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 #[Route('/api/auth')]
 final class ApiAuthController extends AbstractController
 {
     #[Route('/login', name: 'api_login', methods: ['POST', 'OPTIONS'])]
+    /**
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     */
     public function login(
         Request $request,
         UserRepositoryInterface $userRepository,
         UserPasswordHasherInterface $passwordHasher,
+        TokenStorageInterface $tokenStorage,
+        SessionInterface $session,
     ): JsonResponse {
         if ($request->getMethod() === 'OPTIONS') {
             return new JsonResponse(null, 204);
@@ -38,15 +46,32 @@ final class ApiAuthController extends AbstractController
             return $user;
         }
 
+        // Create authentication token and session manually
+        $userAdapter = new SymfonyUserAdapter($user);
+        $token = new UsernamePasswordToken($userAdapter, 'main', $userAdapter->getRoles());
+        $tokenStorage->setToken($token);
+
+        // Store the token in session for persistence
+        $session->set('_security_main', \serialize($token));
+        $session->save();
+
         return $this->createSuccessResponse($user);
     }
 
     #[Route('/logout', name: 'api_logout', methods: ['POST', 'OPTIONS'])]
-    public function logout(Request $request): JsonResponse
-    {
+    public function logout(
+        Request $request,
+        TokenStorageInterface $tokenStorage,
+        SessionInterface $session,
+    ): JsonResponse {
         if ($request->getMethod() === 'OPTIONS') {
             return new JsonResponse(null, 204);
         }
+
+        // Clear authentication token and session
+        $tokenStorage->setToken(null);
+        $session->remove('_security_main');
+        $session->invalidate();
 
         return new JsonResponse(['success' => true, 'message' => 'Logged out successfully']);
     }
@@ -120,9 +145,7 @@ final class ApiAuthController extends AbstractController
             return new JsonResponse(['error' => 'Invalid credentials'], 401);
         }
 
-        if (!$user->isAdmin()) {
-            return new JsonResponse(['error' => 'Access denied'], 403);
-        }
+
 
         return $user;
     }

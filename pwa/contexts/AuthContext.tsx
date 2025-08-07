@@ -37,15 +37,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await fetch('http://localhost:8080/api/admin', {
         credentials: 'include',
+        headers: {
+          'Accept': 'application/ld+json',
+        },
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (data.title === 'Admin Dashboard' && data.user) {
-          setUser({
-            email: data.user.email,
-            roles: data.user.roles
-          });
+        const contentType = response.headers.get('content-type');
+        if (contentType && (contentType.includes('application/json') || contentType.includes('application/ld+json'))) {
+          const data = await response.json();
+          if (data.title === 'Admin Dashboard' && data.user) {
+            setUser({
+              email: data.user.email,
+              roles: data.user.roles
+            });
+          } else {
+            setUser(null);
+          }
+        } else {
+          // HTML response means user is not authenticated (redirect to login)
+          setUser(null);
         }
       } else {
         setUser(null);
@@ -59,27 +70,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const csrfToken = await getCsrfToken();
-      
-      const response = await fetch('https://localhost/login', {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: new URLSearchParams({
+        body: JSON.stringify({
           email,
           password,
-          _csrf_token: csrfToken,
         }),
       });
 
       if (response.ok) {
-        setUser({
-          email,
-          roles: ['ROLE_ADMIN']
-        });
-        return true;
+        const data = await response.json();
+        if (data.success && data.user) {
+          setUser({
+            email: data.user.email,
+            roles: data.user.roles
+          });
+          return true;
+        }
       }
       return false;
     } catch (error) {
@@ -89,8 +100,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await fetch('https://localhost/logout', {
-        method: 'GET',
+      await fetch('http://localhost:8080/api/auth/logout', {
+        method: 'POST',
         credentials: 'include',
       });
     } catch (error) {
@@ -101,18 +112,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     router.push('/login');
   };
 
-  const getCsrfToken = async (): Promise<string> => {
-    try {
-      const response = await fetch('https://localhost/login', {
-        credentials: 'include',
-      });
-      const html = await response.text();
-      const match = html.match(/name="_csrf_token"\s+value="([^"]+)"/);
-      return match ? match[1] : '';
-    } catch {
-      return '';
-    }
-  };
+  // CSRF token no longer needed for API auth
+  // const getCsrfToken = async (): Promise<string> => {
+  //   return '';
+  // };
 
   useEffect(() => {
     checkAuth();

@@ -14,8 +14,8 @@ security:
             security: false
 
         api:
-            pattern: ^/api
-            stateless: true
+            pattern: ^/api/
+            stateless: false
             provider: app_user_provider
             entry_point: App\Security\ApiAuthenticationEntryPoint
 
@@ -40,6 +40,8 @@ security:
         - { path: ^/api/auth, roles: PUBLIC_ACCESS }
         - { path: ^/api/admin, roles: ROLE_ADMIN, methods: [GET, POST, PUT, DELETE, PATCH] }
         - { path: ^/api/admin, roles: PUBLIC_ACCESS, methods: [OPTIONS] }
+        - { path: ^/api/articles, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE, PATCH] }
+        - { path: ^/api/articles, roles: PUBLIC_ACCESS, methods: [GET, OPTIONS] }
         - { path: ^/admin, roles: ROLE_ADMIN }
 
 when@test:
