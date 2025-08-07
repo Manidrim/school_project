@@ -145,8 +145,6 @@ final class ApiAuthController extends AbstractController
             return new JsonResponse(['error' => 'Invalid credentials'], 401);
         }
 
-
-
         return $user;
     }
 
