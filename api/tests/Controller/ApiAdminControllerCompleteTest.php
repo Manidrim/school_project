@@ -25,9 +25,9 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     protected function setUp(): void
     {
-        $this->client = static::createClient();
-        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $this->passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+        $this->client = self::createClient();
+        $this->entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $this->passwordHasher = self::getContainer()->get(UserPasswordHasherInterface::class);
 
         $this->cleanDatabase();
     }
@@ -54,7 +54,6 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     public function testDashboardWithRegularUser(): void
     {
-
         $this->createUser('user@test.com', ['ROLE_USER']);
 
         $jsonContent = \json_encode([
@@ -74,7 +73,6 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     public function testDashboardWithAdmin(): void
     {
-
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
         $jsonContent = \json_encode([
@@ -106,7 +104,6 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     public function testUsersEndpointWithAdmin(): void
     {
-
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
         $this->createUser('user1@test.com', ['ROLE_USER']);
         $this->createUser('user2@test.com', ['ROLE_USER']);
@@ -135,7 +132,6 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     public function testContentEndpointWithAdmin(): void
     {
-
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
         $this->client->request('POST', '/api/auth/login', [], [], [
@@ -161,7 +157,6 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     public function testSettingsEndpointWithAdmin(): void
     {
-
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
         $this->client->request('POST', '/api/auth/login', [], [], [
@@ -187,7 +182,6 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     public function testDashboardStatistics(): void
     {
-
         $admin = $this->createUser('admin@test.com', ['ROLE_ADMIN']);
         $this->createUser('user1@test.com', ['ROLE_USER']);
         $this->createUser('user2@test.com', ['ROLE_USER']);
@@ -215,7 +209,6 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     public function testDashboardModules(): void
     {
-
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
         $this->client->request('POST', '/api/auth/login', [], [], [
