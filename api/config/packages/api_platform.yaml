@@ -12,7 +12,7 @@ api_platform:
         html: ['text/html']
     # Good defaults for REST APIs
     defaults:
-        stateless: true
+        stateless: false
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
         extra_properties:
