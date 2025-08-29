@@ -58,6 +58,11 @@ final class ArticleE2ETest extends ApiTestCase
         self::assertNotNull($data['createdAt']);
         self::assertNotNull($data['updatedAt']);
         self::assertIsInt($data['id']);
+
+        // Verify author email is serialized
+        self::assertIsArray($data['author']);
+        self::assertArrayHasKey('email', $data['author']);
+        self::assertSame('admin@test.com', $data['author']['email']);
     }
 
     public function testCreateArticleWithoutAuthentication(): void
@@ -141,12 +146,15 @@ final class ArticleE2ETest extends ApiTestCase
         $articleId = $createData['id'];
         self::assertIsNumeric($articleId);
 
-        // Act
-        $this->makeJsonRequest('PUT', "/api/articles/{$articleId}", [
+        // Act (use PATCH merge-patch for partial/full update)
+        $this->client->request('PATCH', "/api/articles/{$articleId}", [], [], [
+            'CONTENT_TYPE' => 'application/merge-patch+json',
+            'HTTP_ACCEPT' => 'application/ld+json',
+        ], $this->encodeJson([
             'title' => 'Updated Title',
             'content' => 'Updated content.',
             'isPublished' => true,
-        ]);
+        ]));
 
         // Assert
         $this->assertApiResponseIsSuccessful();
@@ -260,6 +268,13 @@ final class ArticleE2ETest extends ApiTestCase
             self::assertArrayHasKey('author', $article);
             self::assertArrayHasKey('createdAt', $article);
             self::assertArrayHasKey('updatedAt', $article);
+
+            // Verify author has email field in serialized response
+            if ($article['author'] !== null) {
+                self::assertIsArray($article['author']);
+                self::assertArrayHasKey('email', $article['author']);
+                self::assertNotEmpty($article['author']['email']);
+            }
         }
     }
 

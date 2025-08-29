@@ -106,9 +106,11 @@ abstract class ApiTestCase extends WebTestCase
     protected function assertJsonResponse(): void
     {
         $response = $this->client->getResponse();
+        $contentType = (string) $response->headers->get('Content-Type');
         self::assertTrue(
-            $response->headers->contains('Content-Type', 'application/ld+json')
-            || $response->headers->contains('Content-Type', 'application/json'),
+            \str_contains($contentType, 'application/ld+json')
+            || \str_contains($contentType, 'application/json')
+            || \str_contains($contentType, 'application/problem+json'),
         );
     }
 

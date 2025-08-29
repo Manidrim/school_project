@@ -6,6 +6,9 @@ api_platform:
         include_type: true
     formats:
         jsonld: ['application/ld+json']
+    patch_formats:
+        json: ['application/merge-patch+json']
+        jsonld: ['application/merge-patch+json']
     docs_formats:
         jsonld: ['application/ld+json']
         jsonopenapi: ['application/vnd.openapi+json']

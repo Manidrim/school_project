@@ -1,0 +1,51 @@
+name: Docker Linting
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/Dockerfile*'
+      - '**/Caddyfile*'
+      - 'compose*.yaml'
+      - 'compose*.yml'
+  pull_request:
+    paths:
+      - '**/Dockerfile*'
+      - '**/Caddyfile*'
+      - 'compose*.yaml'
+      - 'compose*.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  hadolint:
+    name: Hadolint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Lint Dockerfiles
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true
+          verbose: true
+          failure-threshold: warning
+
+  docker-compose-validate:
+    name: Docker Compose Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Validate docker-compose.yaml
+        run: docker compose -f compose.yaml config -q
+      
+      - name: Validate docker-compose.override.yaml
+        run: docker compose -f compose.yaml -f compose.override.yaml config -q
+      
+      - name: Validate docker-compose.prod.yaml
+        run: docker compose -f compose.yaml -f compose.prod.yaml config -q

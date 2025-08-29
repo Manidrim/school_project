@@ -195,4 +195,16 @@ final class ArticleTest extends TestCase
         $article->setIsPublished(true);
         self::assertTrue($article->isPublished());
     }
+
+    public function testTouchUpdatesModifiedTimestamp(): void
+    {
+        $article = new Article();
+        $originalUpdatedAt = $article->getUpdatedAt();
+
+        \usleep(1000);
+        $result = $article->touch();
+
+        self::assertSame($article, $result);
+        self::assertGreaterThan($originalUpdatedAt, $article->getUpdatedAt());
+    }
 }

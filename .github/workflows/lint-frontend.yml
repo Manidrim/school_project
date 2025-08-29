@@ -1,0 +1,131 @@
+name: Frontend Linting
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pwa/**/*.ts'
+      - 'pwa/**/*.tsx'
+      - 'pwa/**/*.js'
+      - 'pwa/**/*.jsx'
+      - 'pwa/package.json'
+      - 'pwa/pnpm-lock.yaml'
+      - 'pwa/.eslintrc.json'
+  pull_request:
+    paths:
+      - 'pwa/**/*.ts'
+      - 'pwa/**/*.tsx'
+      - 'pwa/**/*.js'
+      - 'pwa/**/*.jsx'
+      - 'pwa/package.json'
+      - 'pwa/pnpm-lock.yaml'
+      - 'pwa/.eslintrc.json'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build PWA Docker image
+        uses: docker/bake-action@v6
+        with:
+          pull: true
+          load: true
+          files: |
+            compose.yaml
+          targets: pwa
+          set: |
+            *.cache-from=type=gha,scope=${{github.ref}}
+            *.cache-from=type=gha,scope=refs/heads/main
+            *.cache-to=type=gha,scope=${{github.ref}},mode=max
+      
+      - name: Start services
+        run: docker compose up pwa -d
+      
+      - name: Install dependencies
+        run: docker compose exec -T pwa pnpm install
+      
+      - name: Run ESLint (with --fix)
+        run: docker compose exec -T pwa pnpm lint --fix
+
+  typescript:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build PWA Docker image
+        uses: docker/bake-action@v6
+        with:
+          pull: true
+          load: true
+          files: |
+            compose.yaml
+          targets: pwa
+          set: |
+            *.cache-from=type=gha,scope=${{github.ref}}
+            *.cache-from=type=gha,scope=refs/heads/main
+            *.cache-to=type=gha,scope=${{github.ref}},mode=max
+      
+      - name: Start services
+        run: docker compose up pwa -d
+      
+      - name: Install dependencies
+        run: docker compose exec -T pwa pnpm install
+      
+      - name: Run TypeScript check
+        run: docker compose exec -T pwa npx tsc --noEmit
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build PWA Docker image
+        uses: docker/bake-action@v6
+        with:
+          pull: true
+          load: true
+          files: |
+            compose.yaml
+          targets: pwa
+          set: |
+            *.cache-from=type=gha,scope=${{github.ref}}
+            *.cache-from=type=gha,scope=refs/heads/main
+            *.cache-to=type=gha,scope=${{github.ref}},mode=max
+      
+      - name: Start services
+        run: docker compose up pwa -d
+      
+      - name: Install dependencies
+        run: docker compose exec -T pwa pnpm install
+      
+      - name: Run tests with coverage check (100% required)
+        run: docker compose exec -T pwa pnpm test:coverage:check
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          file: ./pwa/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage

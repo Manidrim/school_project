@@ -40,7 +40,7 @@ final class ApiAuthController extends AbstractController
             return $credentials;
         }
 
-        $user = $this->authenticateUser($credentials, $userRepository, $passwordHasher);
+        $user = $this->resolveAuthenticatedUser($credentials, $userRepository, $passwordHasher);
 
         if ($user instanceof JsonResponse) {
             return $user;
@@ -83,9 +83,24 @@ final class ApiAuthController extends AbstractController
             return new JsonResponse(null, 204);
         }
 
+        $user = $this->getUser();
+
+        if ($user instanceof SymfonyUserAdapter) {
+            $domainUser = $user->getUser();
+
+            return new JsonResponse([
+                'authenticated' => true,
+                'user' => [
+                    'email' => $domainUser->getEmail(),
+                    'roles' => $domainUser->getRoles(),
+                ],
+            ]);
+        }
+
         return new JsonResponse([
             'authenticated' => false,
             'message' => 'This endpoint is for stateless authentication only',
+            'user' => null,
         ]);
     }
 
@@ -97,7 +112,11 @@ final class ApiAuthController extends AbstractController
         $data = \json_decode($request->getContent(), true);
 
         if (!\is_array($data)) {
-            return new JsonResponse(['error' => 'Email and password are required'], 400);
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Email and password are required',
+                'error' => 'Email and password are required',
+            ], 400);
         }
 
         $validationError = $this->validateCredentialsData($data);
@@ -118,7 +137,11 @@ final class ApiAuthController extends AbstractController
 
         foreach ($requiredFields as $field) {
             if (!isset($data[$field]) || !\is_string($data[$field])) {
-                return new JsonResponse(['error' => 'Email and password are required'], 400);
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Email and password are required',
+                    'error' => 'Email and password are required',
+                ], 400);
             }
         }
 
@@ -128,7 +151,7 @@ final class ApiAuthController extends AbstractController
     /**
      * @param array{email: string, password: string} $credentials
      */
-    private function authenticateUser(
+    private function resolveAuthenticatedUser(
         array $credentials,
         UserRepositoryInterface $userRepository,
         UserPasswordHasherInterface $passwordHasher,
@@ -136,13 +159,21 @@ final class ApiAuthController extends AbstractController
         $user = $userRepository->findByEmail($credentials['email']);
 
         if (!$user) {
-            return new JsonResponse(['error' => 'Invalid credentials'], 401);
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Invalid credentials',
+                'error' => 'Invalid credentials',
+            ], 401);
         }
 
         $adapter = new SymfonyUserAdapter($user);
 
         if (!$passwordHasher->isPasswordValid($adapter, $credentials['password'])) {
-            return new JsonResponse(['error' => 'Invalid credentials'], 401);
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Invalid credentials',
+                'error' => 'Invalid credentials',
+            ], 401);
         }
 
         return $user;
