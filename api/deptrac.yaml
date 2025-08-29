@@ -7,24 +7,24 @@ parameters:
     - name: Domain
       collectors:
         - type: directory
-          regex: src/Domain/.*
+          value: src/Domain
     - name: Application
       collectors:
         - type: directory
-          regex: src/Application/.*
+          value: src/Application
     - name: Infrastructure
       collectors:
         - type: directory
-          regex: src/Infrastructure/.*
+          value: src/Infrastructure
     # Couches fonctionnelles (moins prioritaires)
     - name: Controller
       collectors:
-        - type: className
-          regex: .*Controller.*
+        - type: classNameRegex
+          value: '/.*Controller.*/'
     - name: Command
       collectors:
-        - type: className
-          regex: .*Command.*
+        - type: classNameRegex
+          value: '/.*Command.*/'
   ruleset:
     # Architecture Hexagonale moderne 
     Domain: []  # Domain pur, aucune dépendance
