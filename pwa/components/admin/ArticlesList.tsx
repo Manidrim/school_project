@@ -7,7 +7,7 @@ interface IArticle {
   createdAt: string;
   updatedAt: string;
   isPublished: boolean;
-  author: {
+  author?: {
     email: string;
   };
   lastModifiedBy?: {
@@ -36,6 +36,8 @@ const getStatusBadge = (isPublished: boolean): JSX.Element => (
 
 const formatDate = (dateString: string): string => new Date(dateString).toLocaleDateString();
 
+const getAuthorEmail = (author?: { email: string }): string => author?.email ?? 'Unknown Author';
+
 const ArticleRow = ({ 
   article, 
   onEdit, 
@@ -55,7 +57,7 @@ const ArticleRow = ({
       </div>
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-      {article.author.email}
+      {getAuthorEmail(article.author)}
     </td>
     <td className="px-6 py-4 whitespace-nowrap">
       {getStatusBadge(article.isPublished)}

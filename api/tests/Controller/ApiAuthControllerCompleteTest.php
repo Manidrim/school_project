@@ -125,7 +125,7 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
         $response = $this->decodeJsonResponse();
 
         self::assertFalse($response['success']);
-        self::assertSame('Missing email or password', $response['message']);
+        self::assertSame('Email and password are required', $response['message']);
     }
 
     public function testLoginWithMissingPassword(): void
@@ -142,7 +142,7 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
         $response = $this->decodeJsonResponse();
 
         self::assertFalse($response['success']);
-        self::assertSame('Missing email or password', $response['message']);
+        self::assertSame('Email and password are required', $response['message']);
     }
 
     public function testLoginWithInvalidJson(): void
@@ -157,7 +157,7 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
         $response = $this->decodeJsonResponse();
 
         self::assertFalse($response['success']);
-        self::assertSame('Invalid JSON data', $response['message']);
+        self::assertSame('Email and password are required', $response['message']);
     }
 
     public function testLogoutOptionsRequest(): void

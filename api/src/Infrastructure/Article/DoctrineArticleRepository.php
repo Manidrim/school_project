@@ -41,6 +41,7 @@ final class DoctrineArticleRepository extends ServiceEntityRepository implements
             ->andWhere('a.author = :authorId')
             ->setParameter('authorId', $authorId)
             ->orderBy('a.createdAt', 'DESC')
+            ->addOrderBy('a.id', 'DESC')
             ->getQuery()
             ->getResult()
         ;
@@ -52,6 +53,7 @@ final class DoctrineArticleRepository extends ServiceEntityRepository implements
             ->andWhere('a.isPublished = :published')
             ->setParameter('published', true)
             ->orderBy('a.createdAt', 'DESC')
+            ->addOrderBy('a.id', 'DESC')
             ->getQuery()
             ->getResult()
         ;

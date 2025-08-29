@@ -23,9 +23,18 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new GetCollection(normalizationContext: ['groups' => ['article:read']]),
         new Get(normalizationContext: ['groups' => ['article:read']]),
-        new Post(denormalizationContext: ['groups' => ['article:write']]),
-        new Put(denormalizationContext: ['groups' => ['article:write']]),
-        new Patch(denormalizationContext: ['groups' => ['article:write']]),
+        new Post(
+            denormalizationContext: ['groups' => ['article:write']],
+            security: "is_granted('ROLE_ADMIN')",
+        ),
+        new Put(
+            denormalizationContext: ['groups' => ['article:write']],
+            security: "is_granted('ROLE_ADMIN')",
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['article:write']],
+            security: "is_granted('ROLE_ADMIN')",
+        ),
         new Delete(),
     ],
     normalizationContext: ['groups' => ['article:read']],
@@ -53,11 +62,11 @@ final class Article
     #[Groups(['article:read', 'article:write'])]
     private ?string $content = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, precision: 6)]
     #[Groups(['article:read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, precision: 6)]
     #[Groups(['article:read'])]
     private ?\DateTimeImmutable $updatedAt = null;
 
@@ -71,8 +80,9 @@ final class Article
     #[Groups(['article:read'])]
     private ?User $lastModifiedBy = null;
 
-    #[ORM\Column]
+    #[ORM\Column(name: 'is_published')]
     #[Groups(['article:read', 'article:write'])]
+    #[Assert\Type('bool', groups: ['article:write'])]
     private bool $isPublished = false;
 
     public function __construct(
@@ -158,6 +168,11 @@ final class Article
         return $this->isPublished;
     }
 
+    public function getIsPublished(): bool
+    {
+        return $this->isPublished;
+    }
+
     public function publish(): self
     {
         $this->isPublished = true;
@@ -177,6 +192,13 @@ final class Article
     public function setIsPublished(bool $isPublished): self
     {
         $this->isPublished = $isPublished;
+        $this->updateModifiedTimestamp();
+
+        return $this;
+    }
+
+    public function touch(): self
+    {
         $this->updateModifiedTimestamp();
 
         return $this;

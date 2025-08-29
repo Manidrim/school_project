@@ -108,6 +108,11 @@ final class ApiAdminController extends AbstractController
                 ['id' => 'pages', 'name' => 'Static Pages', 'count' => 0],
                 ['id' => 'media', 'name' => 'Media Files', 'count' => 0],
             ],
+            'content_types' => [
+                ['id' => 'article', 'title' => 'Articles'],
+                ['id' => 'page', 'title' => 'Pages'],
+                ['id' => 'media', 'title' => 'Media'],
+            ],
         ]);
     }
 
