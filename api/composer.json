@@ -34,7 +34,7 @@
     "require-dev": {
         "api-platform/schema-generator": "^5.0",
         "friendsofphp/php-cs-fixer": "^3.0",
-        "qossmic/deptrac-shim": "^1.0",
+        "qossmic/deptrac": "^2.0",
         "phpmd/phpmd": "^2.15",
         "phpstan/phpstan": "^1.10",
         "phpstan/phpstan-doctrine": "^1.3",
