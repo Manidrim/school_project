@@ -33,21 +33,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Build PWA Docker image
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          files: |
-            compose.yaml
-          targets: pwa
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{github.ref}},mode=max
+      - name: Build Docker images
+        run: |
+          docker compose build pwa --pull
       
       - name: Start services
         run: docker compose up pwa -d
@@ -65,21 +53,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Build PWA Docker image
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          files: |
-            compose.yaml
-          targets: pwa
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{github.ref}},mode=max
+      - name: Build Docker images
+        run: |
+          docker compose build pwa --pull
       
       - name: Start services
         run: docker compose up pwa -d
@@ -97,21 +73,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Build PWA Docker image
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          files: |
-            compose.yaml
-          targets: pwa
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{github.ref}},mode=max
+      - name: Build Docker images
+        run: |
+          docker compose build pwa --pull
       
       - name: Start services
         run: docker compose up pwa -d
