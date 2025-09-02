@@ -1,0 +1,73 @@
+name: Coverage Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  coverage-check:
+    name: 100% Coverage Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Build Docker images
+        run: |
+          docker compose build --pull
+      
+      - name: Start services
+        run: docker compose up --wait --no-build
+      
+      - name: Install PHP dependencies
+        run: docker compose exec -T php composer install --no-interaction
+      
+      - name: Install PWA dependencies
+        run: docker compose exec -T pwa pnpm install
+      
+      - name: Create test database
+        run: docker compose exec -T php bin/console -e test doctrine:database:create
+      
+      - name: Run migrations
+        run: docker compose exec -T php bin/console -e test doctrine:migrations:migrate --no-interaction
+      
+      - name: Run PHP tests with 100% coverage requirement
+        run: |
+          echo "🔍 Running PHP tests with 100% coverage requirement..."
+          docker compose exec -T php bin/phpunit --coverage-clover var/coverage/clover.xml
+          docker compose exec -T php php coverage-check.php
+      
+      - name: Run Frontend tests with 100% coverage requirement
+        run: |
+          echo "🔍 Running Frontend tests with 100% coverage requirement..."
+          docker compose exec -T pwa pnpm test:coverage:check
+      
+      - name: Upload PHP coverage to Codecov
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          file: ./api/var/coverage/clover.xml
+          flags: php
+          name: php-coverage
+          fail_ci_if_error: true
+      
+      - name: Upload Frontend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          file: ./pwa/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: true
+      
+      - name: Coverage success message
+        if: success()
+        run: |
+          echo "✅ All tests passed with 100% coverage!"
+          echo "📊 Both PHP and Frontend codebases have achieved complete test coverage."

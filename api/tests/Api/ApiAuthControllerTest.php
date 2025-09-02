@@ -124,9 +124,14 @@ final class ApiAuthControllerTest extends WebTestCase
             'password' => 'user123',
         ]));
 
-        $this->assertResponseStatusCodeSame(403);
+        $this->assertResponseIsSuccessful();
         $response = $this->decodeJsonResponse();
-        self::assertSame('Access denied', $response['error']);
+        self::assertTrue($response['success']);
+        self::assertSame('Authentication successful', $response['message']);
+        self::assertIsArray($response['user']);
+        self::assertSame('user@test.com', $response['user']['email']);
+        self::assertIsArray($response['user']['roles']);
+        self::assertContains('ROLE_USER', $response['user']['roles']);
     }
 
     public function testLoginWithInvalidJson(): void

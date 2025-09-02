@@ -40,51 +40,25 @@ jobs:
           docker compose -f compose.yaml -f compose.override.yaml config -q
           docker compose -f compose.yaml -f compose.prod.yaml config -q
 
-  build-and-test:
-    name: Build & Test
+  php-analysis:
+    name: PHP Tests & Analysis
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test-suite:
-          - name: "PHP Tests & Analysis"
-            commands: |
-              make test-coverage-check
-              make lint-phpstan
-              docker compose exec -T php vendor/bin/phpmd src text phpmd.xml
-              docker compose exec -T php vendor/bin/php-cs-fixer fix --dry-run --verbose --diff
-              docker compose exec -T php bin/console -e test doctrine:schema:validate
-          - name: "Frontend Tests & Analysis"
-            commands: |
-              make test-frontend-coverage-check
-              make lint-eslint
-              docker compose exec -T pwa npx tsc --noEmit
+    needs: [lint-docker]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      
       - name: Build Docker images
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          files: |
-            compose.yaml
-            compose.override.yaml
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{github.ref}},mode=max
-
+        run: |
+          docker compose build --pull
+          docker image prune -f
+      
       - name: Start services
         run: docker compose up --wait --no-build
-
+      
       - name: Wait for services to stabilize
         run: sleep 10
-
+      
       - name: Verify services health
         run: |
           echo "=== Services Status ==="
@@ -93,17 +67,21 @@ jobs:
           docker compose exec -T php curl -f http://localhost:2019/metrics || echo "Caddy metrics check failed"
           curl -f http://localhost --max-time 30 || echo "HTTP check failed"
           curl -fk https://localhost --max-time 30 || echo "HTTPS check failed"
-
+      
       - name: Prepare test environment
         run: |
           docker compose exec -T php bin/console -e test doctrine:database:create --if-not-exists
           docker compose exec -T php bin/console -e test doctrine:migrations:migrate --no-interaction
-
-      - name: Run test suite
-        run: ${{ matrix.test-suite.commands }}
-
+      
+      - name: Run PHP unit tests and checks
+        run: |
+          make test-coverage-check
+          make lint-phpstan
+          docker compose exec -T php vendor/bin/phpmd src text phpmd.xml
+          docker compose exec -T php vendor/bin/php-cs-fixer fix --dry-run --verbose --diff
+          docker compose exec -T php bin/console -e test doctrine:schema:validate
+      
       - name: Upload PHP Coverage
-        if: matrix.test-suite.name == 'PHP Tests & Analysis'
         uses: codecov/codecov-action@v4
         with:
           file: ./api/var/coverage/clover.xml
@@ -111,8 +89,29 @@ jobs:
           name: php-coverage
           fail_ci_if_error: false
 
+  frontend-analysis:
+    name: Frontend Tests & Analysis
+    runs-on: ubuntu-latest
+    needs: [php-analysis]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Build Docker images
+        run: |
+          docker compose build --pull
+          docker image prune -f
+      
+      - name: Start services
+        run: docker compose up --wait --no-build
+      
+      - name: Run frontend tests and checks
+        run: |
+          make test-frontend-coverage-check
+          make lint-eslint
+          docker compose exec -T pwa npx tsc --noEmit
+      
       - name: Upload Frontend Coverage
-        if: matrix.test-suite.name == 'Frontend Tests & Analysis'
         uses: codecov/codecov-action@v4
         with:
           file: ./pwa/coverage/lcov.info
@@ -123,25 +122,15 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [build-and-test]
+    needs: [frontend-analysis]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build Docker images
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          files: |
-            compose.yaml
-            compose.override.yaml
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
+        run: |
+          docker compose build --pull
+          docker image prune -f
 
       - name: Start services
         run: docker compose up --wait --no-build
@@ -230,13 +219,14 @@ jobs:
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
-    needs: [lint-docker, build-and-test, integration-tests]
+    needs: [lint-docker, php-analysis, frontend-analysis, integration-tests]
     if: always()
     steps:
       - name: Check quality gate
         run: |
           if [[ "${{ needs.lint-docker.result }}" == "success" && 
-                "${{ needs.build-and-test.result }}" == "success" && 
+                "${{ needs.php-analysis.result }}" == "success" && 
+                "${{ needs.frontend-analysis.result }}" == "success" && 
                 "${{ needs.integration-tests.result }}" == "success" ]]; then
             echo "✅ All quality checks passed!"
             echo "📊 100% coverage maintained across PHP and Frontend"
@@ -245,7 +235,8 @@ jobs:
           else
             echo "❌ Quality gate failed!"
             echo "Lint Docker: ${{ needs.lint-docker.result }}"
-            echo "Build & Test: ${{ needs.build-and-test.result }}"
+            echo "PHP Analysis: ${{ needs.php-analysis.result }}"
+            echo "Frontend Analysis: ${{ needs.frontend-analysis.result }}"
             echo "Integration: ${{ needs.integration-tests.result }}"
             exit 1
           fi

@@ -1,0 +1,115 @@
+name: PHP Linting
+
+on:
+  workflow_dispatch: ~
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  php-cs-fixer:
+    name: PHP CS Fixer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Build Docker images
+        run: |
+          docker compose build php --pull
+      
+      - name: Start services
+        run: docker compose up php -d
+      
+      - name: Install dependencies
+        run: docker compose exec -T php bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-interaction"
+      
+      - name: Run PHP CS Fixer (dry-run)
+        run: docker compose exec -T php vendor/bin/php-cs-fixer fix --dry-run --verbose --diff
+
+  phpstan:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Build Docker images
+        run: |
+          docker compose build --pull
+      
+      - name: Start services
+        run: docker compose up --wait --no-build
+
+      - name: Add swap space
+        run: |
+          sudo fallocate -l 2G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
+      - name: Install dependencies
+        run: docker compose exec -T php composer install --no-interaction
+      
+      - name: Warm up Symfony cache
+        run: docker compose exec -T php bin/console cache:warmup
+      
+      - name: Run PHPStan
+        run: docker compose exec -T php vendor/bin/phpstan analyse
+
+  phpmd:
+    name: PHPMD
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Build Docker images
+        run: |
+          docker compose build php --pull
+      
+      - name: Start services
+        run: docker compose up php -d
+      
+      - name: Install dependencies
+        run: docker compose exec -T php composer install --no-interaction
+      
+      - name: Run PHPMD
+        run: docker compose exec -T php vendor/bin/phpmd src text phpmd.xml
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Build Docker images
+        run: |
+          docker compose build --pull
+      
+      - name: Start services
+        run: docker compose up --wait --no-build
+      
+      - name: Install dependencies
+        run: docker compose exec -T php composer install --no-interaction
+      
+      - name: Create test database
+        run: docker compose exec -T php bin/console -e test doctrine:database:create
+      
+      - name: Run migrations
+        run: docker compose exec -T php bin/console -e test doctrine:migrations:migrate --no-interaction
+      
+      - name: Run tests with coverage check (100% required)
+        run: |
+          docker compose exec -T php bin/phpunit --coverage-clover var/coverage/clover.xml
+          docker compose exec -T php php coverage-check.php
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          file: ./api/var/coverage/clover.xml
+          flags: php
+          name: php-coverage
