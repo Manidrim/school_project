@@ -39,7 +39,7 @@ jobs:
         run: docker compose up php -d
       
       - name: Install dependencies
-        run: docker compose exec -T php composer install --no-interaction
+        run: docker compose exec -T php bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-interaction"
       
       - name: Run PHP CS Fixer (dry-run)
         run: docker compose exec -T php vendor/bin/php-cs-fixer fix --dry-run --verbose --diff
