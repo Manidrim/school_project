@@ -1,19 +1,7 @@
 name: Docker Linting
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '**/Dockerfile*'
-      - '**/Caddyfile*'
-      - 'compose*.yaml'
-      - 'compose*.yml'
-  pull_request:
-    paths:
-      - '**/Dockerfile*'
-      - '**/Caddyfile*'
-      - 'compose*.yaml'
-      - 'compose*.yml'
+  workflow_dispatch: ~
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}

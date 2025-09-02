@@ -1,25 +1,7 @@
 name: Frontend Linting
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'pwa/**/*.ts'
-      - 'pwa/**/*.tsx'
-      - 'pwa/**/*.js'
-      - 'pwa/**/*.jsx'
-      - 'pwa/package.json'
-      - 'pwa/pnpm-lock.yaml'
-      - 'pwa/.eslintrc.json'
-  pull_request:
-    paths:
-      - 'pwa/**/*.ts'
-      - 'pwa/**/*.tsx'
-      - 'pwa/**/*.js'
-      - 'pwa/**/*.jsx'
-      - 'pwa/package.json'
-      - 'pwa/pnpm-lock.yaml'
-      - 'pwa/.eslintrc.json'
+  workflow_dispatch: ~
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}

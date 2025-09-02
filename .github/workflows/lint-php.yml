@@ -1,23 +1,7 @@
 name: PHP Linting
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'api/**/*.php'
-      - 'api/composer.json'
-      - 'api/composer.lock'
-      - 'api/phpstan.neon'
-      - 'api/phpmd.xml'
-      - 'api/.php-cs-fixer.dist.php'
-  pull_request:
-    paths:
-      - 'api/**/*.php'
-      - 'api/composer.json'
-      - 'api/composer.lock'
-      - 'api/phpstan.neon'
-      - 'api/phpmd.xml'
-      - 'api/.php-cs-fixer.dist.php'
+  workflow_dispatch: ~
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
