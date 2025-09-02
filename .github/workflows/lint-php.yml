@@ -57,7 +57,14 @@ jobs:
       
       - name: Start services
         run: docker compose up --wait --no-build
-      
+
+      - name: Add swap space
+        run: |
+          sudo fallocate -l 2G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
       - name: Install dependencies
         run: docker compose exec -T php composer install --no-interaction
       
