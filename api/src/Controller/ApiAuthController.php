@@ -25,8 +25,7 @@ final class ApiAuthController extends AbstractController
     public function __construct(
         private readonly LoginRateLimiter $rateLimiter,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
-    ) {
-    }
+    ) {}
 
     #[Route('/csrf-token', name: 'api_csrf_token', methods: ['GET'])]
     public function csrfToken(): JsonResponse
@@ -64,6 +63,7 @@ final class ApiAuthController extends AbstractController
 
         // CSRF validation
         $csrfError = $this->validateCsrfToken($request);
+
         if ($csrfError instanceof JsonResponse) {
             return $csrfError;
         }

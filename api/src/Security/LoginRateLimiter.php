@@ -16,7 +16,9 @@ use Symfony\Component\HttpFoundation\Request;
 final class LoginRateLimiter
 {
     private const MAX_ATTEMPTS = 5;
+
     private const WINDOW_SECONDS = 300; // 5 minutes
+
     private const CACHE_DIR = '/tmp/login_rate_limit';
 
     public function isRateLimited(Request $request): bool
@@ -30,10 +32,10 @@ final class LoginRateLimiter
         }
 
         // Clean expired entries
-        $now = time();
-        $attempts = array_filter(
+        $now = \time();
+        $attempts = \array_filter(
             $data['attempts'],
-            static fn(int $timestamp): bool => ($now - $timestamp) < self::WINDOW_SECONDS,
+            static fn (int $timestamp): bool => ($now - $timestamp) < self::WINDOW_SECONDS,
         );
 
         return \count($attempts) >= self::MAX_ATTEMPTS;
@@ -45,13 +47,13 @@ final class LoginRateLimiter
         $key = $this->getCacheKey($ip);
         $data = $this->readCache($key) ?? ['attempts' => []];
 
-        $now = time();
+        $now = \time();
         $data['attempts'][] = $now;
 
         // Keep only attempts within the window
-        $data['attempts'] = array_values(array_filter(
+        $data['attempts'] = \array_values(\array_filter(
             $data['attempts'],
-            static fn(int $timestamp): bool => ($now - $timestamp) < self::WINDOW_SECONDS,
+            static fn (int $timestamp): bool => ($now - $timestamp) < self::WINDOW_SECONDS,
         ));
 
         $this->writeCache($key, $data);
@@ -68,7 +70,7 @@ final class LoginRateLimiter
 
     private function getCacheKey(string $ip): string
     {
-        return hash('sha256', $ip);
+        return \hash('sha256', $ip);
     }
 
     /**
@@ -99,9 +101,9 @@ final class LoginRateLimiter
         }
 
         /** @var list<int> $attempts */
-        $attempts = array_values(array_filter(
+        $attempts = \array_values(\array_filter(
             $data['attempts'],
-            static fn(mixed $v): bool => \is_int($v),
+            static fn (mixed $v): bool => \is_int($v),
         ));
 
         return ['attempts' => $attempts];
