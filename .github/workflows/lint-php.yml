@@ -10,6 +10,7 @@ on:
       - 'api/phpstan.neon'
       - 'api/phpmd.xml'
       - 'api/.php-cs-fixer.dist.php'
+      - '.github/workflows/lint-php.yml'
   pull_request:
     paths:
       - 'api/**/*.php'
@@ -18,6 +19,7 @@ on:
       - 'api/phpstan.neon'
       - 'api/phpmd.xml'
       - 'api/.php-cs-fixer.dist.php'
+      - '.github/workflows/lint-php.yml'
 
 permissions:
   contents: read
