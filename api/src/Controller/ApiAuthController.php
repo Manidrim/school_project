@@ -38,6 +38,7 @@ final class ApiAuthController extends AbstractController
     #[Route('/login', name: 'api_login', methods: ['POST', 'OPTIONS'])]
     /**
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function login(
         Request $request,

@@ -92,21 +92,27 @@ final class LoginRateLimiter
 
         $data = \json_decode($content, true);
 
-        if (!\is_array($data)) {
-            return null;
-        }
-
-        if (!isset($data['attempts']) || !\is_array($data['attempts'])) {
+        if (!$this->isValidCacheData($data)) {
             return null;
         }
 
         /** @var list<int> $attempts */
         $attempts = \array_values(\array_filter(
             $data['attempts'],
-            static fn (mixed $v): bool => \is_int($v),
+            static fn (mixed $value): bool => \is_int($value),
         ));
 
         return ['attempts' => $attempts];
+    }
+
+    /**
+     * @param mixed $data
+     */
+    private function isValidCacheData(mixed $data): bool
+    {
+        return \is_array($data)
+            && isset($data['attempts'])
+            && \is_array($data['attempts']);
     }
 
     /**
