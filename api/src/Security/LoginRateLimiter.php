@@ -90,7 +90,21 @@ final class LoginRateLimiter
 
         $data = \json_decode($content, true);
 
-        return \is_array($data) ? $data : null;
+        if (!\is_array($data)) {
+            return null;
+        }
+
+        if (!isset($data['attempts']) || !\is_array($data['attempts'])) {
+            return null;
+        }
+
+        /** @var list<int> $attempts */
+        $attempts = array_values(array_filter(
+            $data['attempts'],
+            static fn(mixed $v): bool => \is_int($v),
+        ));
+
+        return ['attempts' => $attempts];
     }
 
     /**
