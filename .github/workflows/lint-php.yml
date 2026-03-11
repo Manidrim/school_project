@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  php-cs-fixer:
-    name: PHP CS Fixer
+  php-quality:
+    name: PHP Quality
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,7 +44,7 @@ jobs:
 
       - name: Add swap space
         run: |
-          SWAPFILE="/swapfile_cs_fixer"
+          SWAPFILE="/swapfile_php"
           if [ ! -f "$SWAPFILE" ]; then
             sudo fallocate -l 2G "$SWAPFILE"
             sudo chmod 600 "$SWAPFILE"
@@ -69,10 +69,12 @@ jobs:
             *.cache-to=type=gha,scope=${{github.ref}},mode=max
 
       - name: Start services
-        run: docker compose up php -d
+        run: docker compose up --wait --no-build
 
       - name: Install dependencies
         run: docker compose exec -T php bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-interaction"
+
+      # ── CS Fixer ────────────────────────────────────────────────────────────
 
       - name: Run PHP CS Fixer
         run: docker compose exec -T php vendor/bin/php-cs-fixer fix --verbose
@@ -83,47 +85,7 @@ jobs:
           commit_message: "style: apply php-cs-fixer fixes"
           commit_author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
-  phpstan:
-    name: PHPStan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Add swap space
-        run: |
-          SWAPFILE="/swapfile_phpstan"
-          if [ ! -f "$SWAPFILE" ]; then
-            sudo fallocate -l 2G "$SWAPFILE"
-            sudo chmod 600 "$SWAPFILE"
-            sudo mkswap "$SWAPFILE"
-            sudo swapon "$SWAPFILE"
-            echo "Swap space added: $SWAPFILE"
-          else
-            echo "Swap file already exists, skipping creation"
-          fi
-
-      - name: Build Docker images
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          files: |
-            compose.yaml
-            compose.override.yaml
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{github.ref}},mode=max
-
-      - name: Start services
-        run: docker compose up --wait --no-build
-
-      - name: Install dependencies
-        run: docker compose exec -T php composer install --no-interaction
+      # ── PHPStan ─────────────────────────────────────────────────────────────
 
       - name: Warm up Symfony cache
         run: docker compose exec -T php bin/console cache:warmup
@@ -131,92 +93,12 @@ jobs:
       - name: Run PHPStan
         run: docker compose exec -T php vendor/bin/phpstan analyse --memory-limit=-1 --no-progress
 
-  phpmd:
-    name: PHPMD
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Add swap space
-        run: |
-          SWAPFILE="/swapfile_phpmd"
-          if [ ! -f "$SWAPFILE" ]; then
-            sudo fallocate -l 2G "$SWAPFILE"
-            sudo chmod 600 "$SWAPFILE"
-            sudo mkswap "$SWAPFILE"
-            sudo swapon "$SWAPFILE"
-            echo "Swap space added: $SWAPFILE"
-          else
-            echo "Swap file already exists, skipping creation"
-          fi
-
-      - name: Build Docker images
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          files: |
-            compose.yaml
-            compose.override.yaml
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{github.ref}},mode=max
-
-      - name: Start services
-        run: docker compose up php -d
-
-      - name: Install dependencies
-        run: docker compose exec -T php composer install --no-interaction
+      # ── PHPMD ───────────────────────────────────────────────────────────────
 
       - name: Run PHPMD
         run: docker compose exec -T php vendor/bin/phpmd src text phpmd.xml
 
-  coverage:
-    name: Code Coverage
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Add swap space
-        run: |
-          SWAPFILE="/swapfile_coverage"
-          if [ ! -f "$SWAPFILE" ]; then
-            sudo fallocate -l 2G "$SWAPFILE"
-            sudo chmod 600 "$SWAPFILE"
-            sudo mkswap "$SWAPFILE"
-            sudo swapon "$SWAPFILE"
-            echo "Swap space added: $SWAPFILE"
-          else
-            echo "Swap file already exists, skipping creation"
-          fi
-
-      - name: Build Docker images
-        uses: docker/bake-action@v6
-        with:
-          pull: true
-          load: true
-          files: |
-            compose.yaml
-            compose.override.yaml
-          set: |
-            *.cache-from=type=gha,scope=${{github.ref}}
-            *.cache-from=type=gha,scope=refs/heads/main
-            *.cache-to=type=gha,scope=${{github.ref}},mode=max
-
-      - name: Start services
-        run: docker compose up --wait --no-build
-
-      - name: Install dependencies
-        run: docker compose exec -T php composer install --no-interaction
+      # ── Code Coverage ───────────────────────────────────────────────────────
 
       - name: Create test database
         run: docker compose exec -T php bin/console -e test doctrine:database:create
