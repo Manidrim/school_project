@@ -19,6 +19,9 @@ on:
       - 'api/phpmd.xml'
       - 'api/.php-cs-fixer.dist.php'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true

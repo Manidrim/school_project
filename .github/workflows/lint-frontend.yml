@@ -21,6 +21,9 @@ on:
       - 'pwa/pnpm-lock.yaml'
       - 'pwa/.eslintrc.json'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
