@@ -53,6 +53,19 @@ jobs:
       - name: Start services
         run: docker compose up php -d
 
+      - name: Add swap space
+        run: |
+          SWAPFILE="/swapfile_cs_fixer"
+          if [ ! -f "$SWAPFILE" ]; then
+            sudo fallocate -l 2G "$SWAPFILE"
+            sudo chmod 600 "$SWAPFILE"
+            sudo mkswap "$SWAPFILE"
+            sudo swapon "$SWAPFILE"
+            echo "Swap space added: $SWAPFILE"
+          else
+            echo "Swap file already exists, skipping creation"
+          fi
+
       - name: Install dependencies
         run: docker compose exec -T php bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-interaction"
 
@@ -133,6 +146,19 @@ jobs:
       - name: Start services
         run: docker compose up php -d
 
+      - name: Add swap space
+        run: |
+          SWAPFILE="/swapfile_phpmd"
+          if [ ! -f "$SWAPFILE" ]; then
+            sudo fallocate -l 2G "$SWAPFILE"
+            sudo chmod 600 "$SWAPFILE"
+            sudo mkswap "$SWAPFILE"
+            sudo swapon "$SWAPFILE"
+            echo "Swap space added: $SWAPFILE"
+          else
+            echo "Swap file already exists, skipping creation"
+          fi
+
       - name: Install dependencies
         run: docker compose exec -T php composer install --no-interaction
 
@@ -164,6 +190,19 @@ jobs:
 
       - name: Start services
         run: docker compose up --wait --no-build
+
+      - name: Add swap space
+        run: |
+          SWAPFILE="/swapfile_coverage"
+          if [ ! -f "$SWAPFILE" ]; then
+            sudo fallocate -l 2G "$SWAPFILE"
+            sudo chmod 600 "$SWAPFILE"
+            sudo mkswap "$SWAPFILE"
+            sudo swapon "$SWAPFILE"
+            echo "Swap space added: $SWAPFILE"
+          else
+            echo "Swap file already exists, skipping creation"
+          fi
 
       - name: Install dependencies
         run: docker compose exec -T php composer install --no-interaction
