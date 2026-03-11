@@ -105,6 +105,9 @@ final class LoginRateLimiter
         return ['attempts' => $attempts];
     }
 
+    /**
+     * @phpstan-assert-if-true array{attempts: array<mixed>} $data
+     */
     private function isValidCacheData(mixed $data): bool
     {
         return \is_array($data)
