@@ -71,6 +71,9 @@ final class LoginRateLimiter
         return hash('sha256', $ip);
     }
 
+    /**
+     * @return array{attempts: list<int>}|null
+     */
     private function readCache(string $key): ?array
     {
         $file = self::CACHE_DIR . '/' . $key;
@@ -90,6 +93,9 @@ final class LoginRateLimiter
         return \is_array($data) ? $data : null;
     }
 
+    /**
+     * @param array{attempts: list<int>} $data
+     */
     private function writeCache(string $key, array $data): void
     {
         if (!\is_dir(self::CACHE_DIR)) {
