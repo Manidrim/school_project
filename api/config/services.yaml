@@ -25,9 +25,13 @@ services:
     
     # Domain Services
     App\Domain\User\UserRepositoryInterface: '@App\Infrastructure\User\DoctrineUserRepository'
+    App\Domain\Article\ArticleRepositoryInterface: '@App\Infrastructure\Article\DoctrineArticleRepository'
     
     # Infrastructure Services
     App\Infrastructure\User\DoctrineUserRepository:
+        tags: ['doctrine.repository_service']
+        
+    App\Infrastructure\Article\DoctrineArticleRepository:
         tags: ['doctrine.repository_service']
         
     App\Infrastructure\Security\UserProvider:
