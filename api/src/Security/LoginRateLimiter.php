@@ -105,9 +105,6 @@ final class LoginRateLimiter
         return ['attempts' => $attempts];
     }
 
-    /**
-     * @param mixed $data
-     */
     private function isValidCacheData(mixed $data): bool
     {
         return \is_array($data)
