@@ -53,12 +53,12 @@ jobs:
       - name: Start services
         run: docker compose up php -d
 
-      - name: Cache Composer dependencies
+      - name: Cache Composer downloads
         uses: actions/cache@v4
         with:
-          path: api/vendor
-          key: composer-${{ hashFiles('api/composer.lock') }}
-          restore-keys: composer-
+          path: ~/.composer/cache
+          key: composer-cache-${{ hashFiles('api/composer.lock') }}
+          restore-keys: composer-cache-
 
       - name: Install dependencies
         run: docker compose exec -T php bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-interaction"
@@ -105,12 +105,12 @@ jobs:
             echo "Swap file already exists, skipping creation"
           fi
 
-      - name: Cache Composer dependencies
+      - name: Cache Composer downloads
         uses: actions/cache@v4
         with:
-          path: api/vendor
-          key: composer-${{ hashFiles('api/composer.lock') }}
-          restore-keys: composer-
+          path: ~/.composer/cache
+          key: composer-cache-${{ hashFiles('api/composer.lock') }}
+          restore-keys: composer-cache-
 
       - name: Install dependencies
         run: docker compose exec -T php composer install --no-interaction
@@ -147,12 +147,12 @@ jobs:
       - name: Start services
         run: docker compose up php -d
 
-      - name: Cache Composer dependencies
+      - name: Cache Composer downloads
         uses: actions/cache@v4
         with:
-          path: api/vendor
-          key: composer-${{ hashFiles('api/composer.lock') }}
-          restore-keys: composer-
+          path: ~/.composer/cache
+          key: composer-cache-${{ hashFiles('api/composer.lock') }}
+          restore-keys: composer-cache-
 
       - name: Install dependencies
         run: docker compose exec -T php composer install --no-interaction
@@ -186,12 +186,12 @@ jobs:
       - name: Start services
         run: docker compose up --wait --no-build
 
-      - name: Cache Composer dependencies
+      - name: Cache Composer downloads
         uses: actions/cache@v4
         with:
-          path: api/vendor
-          key: composer-${{ hashFiles('api/composer.lock') }}
-          restore-keys: composer-
+          path: ~/.composer/cache
+          key: composer-cache-${{ hashFiles('api/composer.lock') }}
+          restore-keys: composer-cache-
 
       - name: Install dependencies
         run: docker compose exec -T php composer install --no-interaction
