@@ -87,10 +87,16 @@ jobs:
 
       - name: Add swap space
         run: |
-          sudo fallocate -l 2G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          SWAPFILE="/swapfile_phpstan"
+          if [ ! -f "$SWAPFILE" ]; then
+            sudo fallocate -l 2G "$SWAPFILE"
+            sudo chmod 600 "$SWAPFILE"
+            sudo mkswap "$SWAPFILE"
+            sudo swapon "$SWAPFILE"
+            echo "Swap space added: $SWAPFILE"
+          else
+            echo "Swap file already exists, skipping creation"
+          fi
 
       - name: Install dependencies
         run: docker compose exec -T php composer install --no-interaction
