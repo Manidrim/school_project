@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
@@ -19,10 +21,17 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity]
 #[ORM\Table(name: 'articles')]
 #[ORM\HasLifecycleCallbacks]
+#[ApiFilter(BooleanFilter::class, properties: ['isPublished'])]
 #[ApiResource(
     operations: [
-        new GetCollection(normalizationContext: ['groups' => ['article:read']]),
-        new Get(normalizationContext: ['groups' => ['article:read']]),
+        new GetCollection(
+            normalizationContext: ['groups' => ['article:read']],
+        ),
+        new Get(
+            normalizationContext: ['groups' => ['article:read']],
+            security: "object.isPublished() or is_granted('ROLE_ADMIN')",
+            securityMessage: 'This article is not published.',
+        ),
         new Post(
             denormalizationContext: ['groups' => ['article:write']],
             security: "is_granted('ROLE_ADMIN')",
@@ -35,7 +44,9 @@ use Symfony\Component\Validator\Constraints as Assert;
             denormalizationContext: ['groups' => ['article:write']],
             security: "is_granted('ROLE_ADMIN')",
         ),
-        new Delete(),
+        new Delete(
+            security: "is_granted('ROLE_ADMIN')",
+        ),
     ],
     normalizationContext: ['groups' => ['article:read']],
     denormalizationContext: ['groups' => ['article:write']],

@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 final class ApiAdminController extends AbstractController
 {
     #[Route('', name: 'api_admin_dashboard', methods: ['GET', 'OPTIONS'])]
-    public function dashboard(Request $request): JsonResponse
+    public function dashboard(Request $request, UserRepositoryInterface $userRepository): JsonResponse
     {
         if ($request->getMethod() === 'OPTIONS') {
             return new JsonResponse(null, 204);
@@ -58,7 +58,7 @@ final class ApiAdminController extends AbstractController
                 ],
             ],
             'stats' => [
-                'total_users' => 3,
+                'total_users' => \count($userRepository->findAll()),
                 'last_login' => \date('Y-m-d H:i:s'),
             ],
         ]);

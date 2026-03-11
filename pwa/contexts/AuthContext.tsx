@@ -35,7 +35,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/admin', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/admin`, {
         credentials: 'include',
         headers: {
           'Accept': 'application/ld+json',
@@ -70,7 +71,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const csrfToken = await getCsrfToken();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,6 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: JSON.stringify({
           email,
           password,
+          _csrf_token: csrfToken,
         }),
       });
 
@@ -100,7 +104,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await fetch('http://localhost:8080/api/auth/logout', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -112,10 +117,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     router.push('/login');
   };
 
-  // CSRF token no longer needed for API auth
-  // const getCsrfToken = async (): Promise<string> => {
-  //   return '';
-  // };
+  const getCsrfToken = async (): Promise<string> => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/auth/csrf-token`, {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.csrf_token || '';
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  };
 
   useEffect(() => {
     checkAuth();

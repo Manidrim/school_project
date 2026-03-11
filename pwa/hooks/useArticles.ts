@@ -10,11 +10,12 @@ interface IApiResponse {
   "hydra:member": IArticle[];
 }
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 const useArticles = (user: IUser | null) => {
   const [articles, setArticles] = useState<IArticle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<IArticleFormData>({
     title: "",
     content: "",
@@ -24,6 +25,7 @@ const useArticles = (user: IUser | null) => {
 
   const fetchArticles = async (): Promise<void> => {
     try {
+      setError(null);
       const response = await fetch(`${API_BASE_URL}/api/articles`, {
         credentials: 'include',
         headers: {
@@ -33,9 +35,12 @@ const useArticles = (user: IUser | null) => {
       if (response.ok) {
         const data = await response.json() as IApiResponse;
         setArticles(data["hydra:member"] || []);
+      } else {
+        setError(`Failed to load articles (${response.status})`);
       }
-    } catch (error) {
-      // Silently handle errors - could be logged to monitoring service
+    } catch (err) {
+      setError('Network error: unable to fetch articles');
+      console.error('fetchArticles error:', err);
     }
   };
 
@@ -72,11 +77,16 @@ const useArticles = (user: IUser | null) => {
       });
 
       if (response.ok) {
+        setError(null);
         clearForm();
         await fetchArticles();
+      } else {
+        const data = await response.json().catch(() => null);
+        setError(data?.detail || `Failed to save article (${response.status})`);
       }
-    } catch (error) {
-      // Silently handle errors - could be logged to monitoring service
+    } catch (err) {
+      setError('Network error: unable to save article');
+      console.error('handleSubmit error:', err);
     } finally {
       setLoading(false);
     }
@@ -107,10 +117,14 @@ const useArticles = (user: IUser | null) => {
       });
 
       if (response.ok) {
+        setError(null);
         await fetchArticles();
+      } else {
+        setError(`Failed to delete article (${response.status})`);
       }
-    } catch (error) {
-      // Silently handle errors - could be logged to monitoring service
+    } catch (err) {
+      setError('Network error: unable to delete article');
+      console.error('handleDelete error:', err);
     }
   };
 
@@ -127,10 +141,14 @@ const useArticles = (user: IUser | null) => {
       });
 
       if (response.ok) {
+        setError(null);
         await fetchArticles();
+      } else {
+        setError(`Failed to update publish status (${response.status})`);
       }
-    } catch (error) {
-      // Silently handle errors - could be logged to monitoring service
+    } catch (err) {
+      setError('Network error: unable to update article');
+      console.error('handleTogglePublish error:', err);
     }
   };
 
@@ -146,6 +164,7 @@ const useArticles = (user: IUser | null) => {
     setFormData,
     editingArticle,
     loading,
+    error,
     handleSubmit,
     handleEdit,
     handleDelete,

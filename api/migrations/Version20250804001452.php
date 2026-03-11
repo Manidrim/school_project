@@ -19,7 +19,7 @@ final class Version20250804001452 extends AbstractMigration
         $this->addSql('CREATE SEQUENCE articles_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE TABLE articles (
             id INT NOT NULL, 
-            author_id INT NOT NULL, 
+            author_id INT DEFAULT NULL, 
             last_modified_by_id INT DEFAULT NULL, 
             title VARCHAR(255) NOT NULL, 
             content TEXT NOT NULL, 
