@@ -12,7 +12,7 @@ const Layout = ({
 }: {
   children: ReactNode;
   dehydratedState: DehydratedState;
-}) => {
+}): JSX.Element => {
   const [queryClient] = useState(() => new QueryClient());
 
   return (

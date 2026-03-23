@@ -68,7 +68,13 @@ describe('AuthContext', () => {
   it('shows user info when authenticated', async () => {
     ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      text: () => Promise.resolve('Welcome, test@example.com!'),
+      json: () => Promise.resolve({
+        title: 'Admin Dashboard',
+        user: {
+          email: 'test@example.com',
+          roles: ['ROLE_ADMIN']
+        }
+      }),
     })
 
     render(<MockedAuthProvider />)
@@ -113,7 +119,13 @@ describe('AuthContext', () => {
     ;(global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve('Welcome, test@example.com!'),
+        json: () => Promise.resolve({
+          title: 'Admin Dashboard',
+          user: {
+            email: 'test@example.com',
+            roles: ['ROLE_ADMIN']
+          }
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,

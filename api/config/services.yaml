@@ -22,3 +22,18 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    
+    # Domain Services
+    App\Domain\User\UserRepositoryInterface: '@App\Infrastructure\User\DoctrineUserRepository'
+    
+    # Infrastructure Services
+    App\Infrastructure\User\DoctrineUserRepository:
+        tags: ['doctrine.repository_service']
+        
+    App\Infrastructure\Security\UserProvider:
+        arguments:
+            $userRepository: '@App\Domain\User\UserRepositoryInterface'
+            
+    App\Infrastructure\Security\SymfonyPasswordUpgrader:
+        arguments:
+            $userRepository: '@App\Domain\User\UserRepositoryInterface'

@@ -25,4 +25,4 @@ final class Version20241224120000 extends AbstractMigration
         $this->addSql('DROP SEQUENCE users_id_seq CASCADE');
         $this->addSql('DROP TABLE users');
     }
-} 
+}

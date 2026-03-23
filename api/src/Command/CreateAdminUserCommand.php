@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
+use App\Domain\User\UserRepositoryInterface;
 use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Infrastructure\User\SymfonyUserAdapter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,11 +19,11 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
     name: 'app:create-admin-user',
     description: 'Create an admin user',
 )]
-class CreateAdminUserCommand extends Command
+final class CreateAdminUserCommand extends Command
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private UserPasswordHasherInterface $passwordHasher
+        private UserRepositoryInterface $userRepository,
+        private UserPasswordHasherInterface $passwordHasher,
     ) {
         parent::__construct();
     }
@@ -35,27 +38,33 @@ class CreateAdminUserCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-        $email = $input->getArgument('email');
-        $password = $input->getArgument('password');
+        $console = new SymfonyStyle($input, $output);
+        $emailArg = $input->getArgument('email');
+        $passwordArg = $input->getArgument('password');
 
-        $existingUser = $this->entityManager->getRepository(User::class)->findOneByEmail($email);
-        if ($existingUser) {
-            $io->error('User with this email already exists!');
+        if (!\is_string($emailArg) || !\is_string($passwordArg)) {
+            $console->error('Invalid arguments provided');
+
             return Command::FAILURE;
         }
 
-        $user = new User();
-        $user->setEmail($email);
-        $user->setRoles(['ROLE_ADMIN']);
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
+        $existingUser = $this->userRepository->findByEmail($emailArg);
+
+        if ($existingUser) {
+            $console->error('User with this email already exists!');
+
+            return Command::FAILURE;
+        }
+
+        $user = new User($emailArg, ['ROLE_ADMIN']);
+        $adapter = new SymfonyUserAdapter($user);
+        $hashedPassword = $this->passwordHasher->hashPassword($adapter, $passwordArg);
         $user->setPassword($hashedPassword);
 
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
+        $this->userRepository->save($user);
 
-        $io->success('Admin user created successfully!');
+        $console->success('Admin user created successfully!');
 
         return Command::SUCCESS;
     }
-} 
+}

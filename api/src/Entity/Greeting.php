@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
@@ -14,19 +16,19 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Greeting
 {
     /**
-     * The entity ID
+     * A nice person.
+     */
+    #[ORM\Column]
+    #[Assert\NotBlank]
+    public string $name = '';
+
+    /**
+     * The entity ID.
      */
     #[ORM\Id]
     #[ORM\Column(type: 'integer')]
     #[ORM\GeneratedValue(strategy: 'SEQUENCE')]
     private ?int $id = null;
-
-    /**
-     * A nice person
-     */
-    #[ORM\Column]
-    #[Assert\NotBlank]
-    public string $name = '';
 
     public function getId(): ?int
     {

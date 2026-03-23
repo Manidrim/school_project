@@ -1,0 +1,43 @@
+parameters:
+  paths:
+    - ./src
+  exclude_files: []
+  layers:
+    # Architecture Hexagonale/DDD - par répertoire (priorité)
+    - name: Domain
+      collectors:
+        - type: directory
+          regex: src/Domain/.*
+    - name: Application
+      collectors:
+        - type: directory
+          regex: src/Application/.*
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          regex: src/Infrastructure/.*
+    # Couches fonctionnelles (moins prioritaires)
+    - name: Controller
+      collectors:
+        - type: className
+          regex: .*Controller.*
+    - name: Command
+      collectors:
+        - type: className
+          regex: .*Command.*
+  ruleset:
+    # Architecture Hexagonale moderne 
+    Domain: []  # Domain pur, aucune dépendance
+    Application:
+      - Domain  # Application utilise Domain
+    Infrastructure:
+      - Domain        # Infrastructure utilise Domain
+      - Application   # Infrastructure peut utiliser Application
+    Controller:
+      - Domain
+      - Application
+      - Infrastructure
+    Command:
+      - Domain
+      - Application
+      - Infrastructure

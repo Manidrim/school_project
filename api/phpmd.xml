@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<ruleset name="Strict Clean Code and DDD PHPMD Rules"
+         xmlns="http://pmd.sf.net/ruleset/1.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd"
+         xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd">
+    <description>Strict PHPMD rules for Clean Code, DDD and Hexagonal Architecture</description>
+
+
+
+    <!-- Code Size Rules - Strict limits for better maintainability -->
+    <rule ref="rulesets/codesize.xml"/>
+    
+    <!-- Override default limits with stricter values -->
+    <rule ref="rulesets/codesize.xml/CyclomaticComplexity">
+        <properties>
+            <property name="reportLevel" value="5"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/codesize.xml/NPathComplexity">
+        <properties>
+            <property name="minimum" value="100"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/codesize.xml/ExcessiveMethodLength">
+        <properties>
+            <property name="minimum" value="50"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/codesize.xml/ExcessiveClassLength">
+        <properties>
+            <property name="minimum" value="300"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/codesize.xml/ExcessiveParameterList">
+        <properties>
+            <property name="minimum" value="5"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/codesize.xml/ExcessivePublicCount">
+        <properties>
+            <property name="minimum" value="15"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/codesize.xml/TooManyFields">
+        <properties>
+            <property name="maxfields" value="10"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/codesize.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="15"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/codesize.xml/TooManyPublicMethods">
+        <properties>
+            <property name="maxmethods" value="8"/>
+        </properties>
+    </rule>
+
+    <!-- Controversial Rules -->
+    <rule ref="rulesets/controversial.xml">
+        <exclude name="Superglobals"/>
+        <exclude name="CamelCaseClassName"/>
+        <exclude name="CamelCasePropertyName"/>
+        <exclude name="CamelCaseMethodName"/>
+        <exclude name="CamelCaseParameterName"/>
+        <exclude name="CamelCaseVariableName"/>
+    </rule>
+
+    <!-- Design Rules - All enabled for better architecture -->
+    <rule ref="rulesets/design.xml"/>
+    
+    <!-- Enforce depth limit for better readability -->
+    <rule ref="rulesets/design.xml/GotoStatement"/>
+    <rule ref="rulesets/design.xml/NumberOfChildren">
+        <properties>
+            <property name="minimum" value="10"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/design.xml/DepthOfInheritance">
+        <properties>
+            <property name="minimum" value="4"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/design.xml/CouplingBetweenObjects">
+        <properties>
+            <property name="minimum" value="8"/>
+        </properties>
+    </rule>
+
+    <!-- Naming Rules - Strict for Clean Code -->
+    <rule ref="rulesets/naming.xml">
+        <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
+        <exclude name="ShortMethodName"/>
+        <exclude name="LongClassName"/>
+    </rule>
+
+    <!-- Custom naming rules for better readability -->
+    <rule ref="rulesets/naming.xml/ShortVariable">
+        <properties>
+            <property name="minimum" value="2"/>
+        </properties>
+    </rule>
+
+    <rule ref="rulesets/naming.xml/LongVariable">
+        <properties>
+            <property name="maximum" value="25"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/naming.xml/ShortMethodName">
+        <properties>
+            <property name="minimum" value="3"/>
+        </properties>
+    </rule>
+    
+    <rule ref="rulesets/naming.xml/LongClassName">
+        <properties>
+            <property name="maximum" value="40"/>
+        </properties>
+    </rule>
+
+    <!-- Unused Code Rules - All enabled except problematic ones -->
+    <rule ref="rulesets/unusedcode.xml">
+        <exclude name="UnusedFormalParameter"/>
+    </rule>
+
+    <!-- Clean Code Rules - Exclude problematic ones -->
+    <rule ref="rulesets/cleancode.xml">
+        <exclude name="MissingImport"/>
+    </rule>
+</ruleset>
