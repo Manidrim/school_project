@@ -37,6 +37,15 @@ final class LoginRateLimiter
         $this->appendAttempt($request);
     }
 
+    public function createRateLimitedResponse(): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => false,
+            'message' => 'Too many login attempts. Please try again in a few minutes.',
+            'error' => 'rate_limited',
+        ], 429);
+    }
+
     private function hasReachedMaxAttempts(Request $request): bool
     {
         $ip = $request->getClientIp() ?? 'unknown';
@@ -71,15 +80,6 @@ final class LoginRateLimiter
         ));
 
         $this->writeCache($key, $data);
-    }
-
-    public function createRateLimitedResponse(): JsonResponse
-    {
-        return new JsonResponse([
-            'success' => false,
-            'message' => 'Too many login attempts. Please try again in a few minutes.',
-            'error' => 'rate_limited',
-        ], 429);
     }
 
     private function getCacheKey(string $ip): string
