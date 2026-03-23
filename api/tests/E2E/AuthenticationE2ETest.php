@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\E2E;
 
+use App\Tests\Support\ApiAuthTestClient;
+
 /**
  * @internal
  *
@@ -16,15 +18,8 @@ final class AuthenticationE2ETest extends ApiTestCase
         // Arrange
         $admin = $this->createAdminUser();
 
-        // Act
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJson([
-            'email' => $admin->getEmail(),
-            'password' => 'admin123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, $admin->getEmail(), 'admin123');
 
-        // Assert
         $this->assertApiResponseIsSuccessful();
         $this->assertJsonResponse();
 
@@ -42,15 +37,8 @@ final class AuthenticationE2ETest extends ApiTestCase
         // Arrange
         $this->createAdminUser();
 
-        // Act
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJson([
-            'email' => 'admin@test.com',
-            'password' => 'wrongpassword',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'wrongpassword');
 
-        // Assert
         $this->assertApiResponseStatusCodeSame(401);
         $this->assertJsonResponse();
 
@@ -61,15 +49,8 @@ final class AuthenticationE2ETest extends ApiTestCase
 
     public function testFailedLoginWithNonExistentUser(): void
     {
-        // Act
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJson([
-            'email' => 'nonexistent@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'nonexistent@test.com', 'password123');
 
-        // Assert
         $this->assertApiResponseStatusCodeSame(401);
         $this->assertJsonResponse();
 

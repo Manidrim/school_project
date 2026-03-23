@@ -20,6 +20,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Add swap space
+        run: |
+          SWAPFILE="/swapfile_cov"
+          if [ ! -f "$SWAPFILE" ]; then
+            sudo fallocate -l 2G "$SWAPFILE"
+            sudo chmod 600 "$SWAPFILE"
+            sudo mkswap "$SWAPFILE"
+            sudo swapon "$SWAPFILE"
+          fi
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -44,7 +54,7 @@ jobs:
         run: docker compose exec -T php composer install --no-interaction
       
       - name: Install PWA dependencies
-        run: docker compose exec -T pwa pnpm install
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm install
       
       - name: Create test database
         run: docker compose exec -T php bin/console -e test doctrine:database:create
@@ -55,13 +65,13 @@ jobs:
       - name: Run PHP tests with 100% coverage requirement
         run: |
           echo "🔍 Running PHP tests with 100% coverage requirement..."
-          docker compose exec -T php bin/phpunit --coverage-clover var/coverage/clover.xml
+          docker compose exec -T -e XDEBUG_MODE=coverage php bin/phpunit --coverage-clover var/coverage/clover.xml
           docker compose exec -T php php coverage-check.php
       
       - name: Run Frontend tests with 100% coverage requirement
         run: |
           echo "🔍 Running Frontend tests with 100% coverage requirement..."
-          docker compose exec -T pwa pnpm test:coverage:check
+          docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm test:coverage:check
       
       - name: Upload PHP coverage to Codecov
         uses: codecov/codecov-action@v3

@@ -7,6 +7,7 @@ namespace App\Tests\Api;
 use App\Domain\User\UserRepositoryInterface;
 use App\Entity\User;
 use App\Infrastructure\User\SymfonyUserAdapter;
+use App\Tests\Support\ApiAuthTestClient;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -43,12 +44,7 @@ final class ApiAuthControllerTest extends WebTestCase
 
     public function testLoginWithValidAdminCredentials(): void
     {
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], (string) \json_encode([
-            'email' => 'admin@test.com',
-            'password' => 'admin123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'admin123');
 
         $this->assertResponseIsSuccessful();
         $response = $this->decodeJsonResponse();
@@ -89,12 +85,15 @@ final class ApiAuthControllerTest extends WebTestCase
 
     public function testLoginWithInvalidEmail(): void
     {
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], (string) \json_encode([
+        $csrf = ApiAuthTestClient::fetchCsrfTokenValue($this->client);
+        $payload = (string) \json_encode([
             'email' => 'nonexistent@test.com',
             'password' => 'admin123',
-        ]));
+            '_csrf_token' => $csrf,
+        ]);
+        $this->client->request('POST', '/api/auth/login', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $payload);
 
         $this->assertResponseStatusCodeSame(401);
         $response = $this->decodeJsonResponse();
@@ -103,12 +102,7 @@ final class ApiAuthControllerTest extends WebTestCase
 
     public function testLoginWithInvalidPassword(): void
     {
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], (string) \json_encode([
-            'email' => 'admin@test.com',
-            'password' => 'wrongpassword',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'wrongpassword');
 
         $this->assertResponseStatusCodeSame(401);
         $response = $this->decodeJsonResponse();
@@ -117,12 +111,7 @@ final class ApiAuthControllerTest extends WebTestCase
 
     public function testLoginWithNonAdminUser(): void
     {
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], (string) \json_encode([
-            'email' => 'user@test.com',
-            'password' => 'user123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'user@test.com', 'user123');
 
         $this->assertResponseIsSuccessful();
         $response = $this->decodeJsonResponse();
@@ -149,6 +138,20 @@ final class ApiAuthControllerTest extends WebTestCase
     {
         $this->client->request('OPTIONS', '/api/auth/logout');
         $this->assertResponseStatusCodeSame(204);
+    }
+
+    public function testLoginRejectsMissingCsrfWhenCredentialsArePresent(): void
+    {
+        $this->client->request('POST', '/api/auth/login', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], (string) \json_encode([
+            'email' => 'admin@test.com',
+            'password' => 'admin123',
+        ]));
+
+        $this->assertResponseStatusCodeSame(403);
+        $response = $this->decodeJsonResponse();
+        self::assertSame('csrf_token_missing', $response['error']);
     }
 
     public function testLogoutPostRequest(): void

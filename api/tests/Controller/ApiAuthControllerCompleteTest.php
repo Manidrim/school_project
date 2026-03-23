@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Tests\Support\ApiAuthTestClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -52,15 +53,8 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
         // Arrange
         $this->createUser('admin@test.com', ['ROLE_ADMIN'], 'admin123');
 
-        // Act
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'admin123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'admin123');
 
-        // Assert
         $this->assertResponseIsSuccessful();
         $response = $this->decodeJsonResponse();
 
@@ -77,15 +71,8 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
         // Arrange
         $this->createUser('admin@test.com', ['ROLE_ADMIN'], 'admin123');
 
-        // Act
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'wrongpassword',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'wrongpassword');
 
-        // Assert
         $this->assertResponseStatusCodeSame(401);
         $response = $this->decodeJsonResponse();
 
@@ -95,15 +82,8 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
 
     public function testLoginWithNonExistentUser(): void
     {
-        // Act
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'nonexistent@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'nonexistent@test.com', 'password123');
 
-        // Assert
         $this->assertResponseStatusCodeSame(401);
         $response = $this->decodeJsonResponse();
 
@@ -173,14 +153,8 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
     {
         // Arrange - Login first
         $this->createUser('admin@test.com', ['ROLE_ADMIN'], 'admin123');
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'admin123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'admin123');
 
-        // Act
         $this->client->request('POST', '/api/auth/logout');
 
         // Assert
@@ -208,14 +182,8 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
     {
         // Arrange - Login first
         $this->createUser('admin@test.com', ['ROLE_ADMIN'], 'admin123');
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'admin123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'admin123');
 
-        // Act
         $this->client->request('GET', '/api/auth/status');
 
         // Assert
@@ -232,14 +200,8 @@ final class ApiAuthControllerCompleteTest extends WebTestCase
     {
         // Arrange - Login
         $this->createUser('admin@test.com', ['ROLE_ADMIN'], 'admin123');
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'admin123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'admin123');
 
-        // Act - Make a protected request
         $this->client->request('GET', '/api/admin', [], [], [
             'HTTP_ACCEPT' => 'application/ld+json',
         ]);

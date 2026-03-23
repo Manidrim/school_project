@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Tests\Support\ApiAuthTestClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -56,15 +57,7 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
     {
         $this->createUser('user@test.com', ['ROLE_USER']);
 
-        $jsonContent = \json_encode([
-            'email' => 'user@test.com',
-            'password' => 'password123',
-        ]);
-        self::assertNotFalse($jsonContent);
-
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $jsonContent);
+        ApiAuthTestClient::loginJson($this->client, 'user@test.com', 'password123');
 
         $this->client->request('GET', '/api/admin');
 
@@ -75,15 +68,7 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
     {
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
-        $jsonContent = \json_encode([
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]);
-        self::assertNotFalse($jsonContent);
-
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $jsonContent);
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'password123');
 
         $this->client->request('GET', '/api/admin', [], [], [
             'HTTP_ACCEPT' => 'application/ld+json',
@@ -108,12 +93,7 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
         $this->createUser('user1@test.com', ['ROLE_USER']);
         $this->createUser('user2@test.com', ['ROLE_USER']);
 
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'password123');
 
         $this->client->request('GET', '/api/admin/users', [], [], [
             'HTTP_ACCEPT' => 'application/ld+json',
@@ -134,12 +114,7 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
     {
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'password123');
 
         $this->client->request('GET', '/api/admin/content', [], [], [
             'HTTP_ACCEPT' => 'application/ld+json',
@@ -159,12 +134,7 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
     {
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'password123');
 
         $this->client->request('GET', '/api/admin/settings', [], [], [
             'HTTP_ACCEPT' => 'application/ld+json',
@@ -182,16 +152,11 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
 
     public function testDashboardStatistics(): void
     {
-        $admin = $this->createUser('admin@test.com', ['ROLE_ADMIN']);
+        $this->createUser('admin@test.com', ['ROLE_ADMIN']);
         $this->createUser('user1@test.com', ['ROLE_USER']);
         $this->createUser('user2@test.com', ['ROLE_USER']);
 
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'password123');
 
         $this->client->request('GET', '/api/admin', [], [], [
             'HTTP_ACCEPT' => 'application/ld+json',
@@ -211,12 +176,7 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
     {
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'password123');
 
         $this->client->request('GET', '/api/admin', [], [], [
             'HTTP_ACCEPT' => 'application/ld+json',
@@ -248,17 +208,6 @@ final class ApiAdminControllerCompleteTest extends WebTestCase
     {
         $this->entityManager->createQuery('DELETE FROM App\Entity\User')->execute();
         $this->entityManager->clear();
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    private function encodeJsonSafe(array $data): string
-    {
-        $encoded = \json_encode($data);
-        self::assertNotFalse($encoded);
-
-        return $encoded;
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\E2E;
 
 use App\Entity\User;
+use App\Tests\Support\ApiAuthTestClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -62,15 +63,7 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function loginAs(User $user, string $password = 'admin123'): void
     {
-        $jsonContent = $this->encodeJson([
-            'email' => $user->getEmail(),
-            'password' => $password,
-        ]);
-
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $jsonContent);
-
+        ApiAuthTestClient::loginJson($this->client, $user->getEmail(), $password);
         $this->assertApiResponseIsSuccessful();
     }
 

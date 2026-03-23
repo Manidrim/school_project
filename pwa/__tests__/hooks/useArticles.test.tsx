@@ -8,7 +8,11 @@ const mockUser = {
 describe('useArticles Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    global.fetch = jest.fn()
+    ;(global.fetch as jest.Mock).mockReset()
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ 'hydra:member': [] }),
+    })
   })
 
   it('initializes with empty articles and correct form data', () => {
@@ -314,9 +318,9 @@ describe('useArticles Hook', () => {
 
     const { result } = renderHook(() => useArticles(mockUser))
 
-    // Should not throw error, just handle gracefully
     await waitFor(() => {
-      expect(result.current.articles).toEqual([])
+      expect(result.current.error).toBe('Network error: unable to fetch articles')
     })
+    expect(result.current.articles).toEqual([])
   })
 })

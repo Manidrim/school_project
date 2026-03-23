@@ -72,9 +72,7 @@ describe('ArticleForm Component', () => {
     expect(screen.getByRole('checkbox', { name: 'Publish immediately' })).toBeChecked()
   })
 
-  it('handles title input changes', async () => {
-    const user = userEvent.setup()
-
+  it('handles title input changes', () => {
     render(
       <ArticleForm
         formData={mockFormData}
@@ -86,17 +84,15 @@ describe('ArticleForm Component', () => {
     )
 
     const titleInput = screen.getByLabelText('Title')
-    await user.type(titleInput, 'New Article Title')
+    fireEvent.change(titleInput, { target: { value: 'New Article Title' } })
 
     expect(mockSetFormData).toHaveBeenCalledWith({
       ...mockFormData,
-      title: 'New Article Title'
+      title: 'New Article Title',
     })
   })
 
-  it('handles content input changes', async () => {
-    const user = userEvent.setup()
-
+  it('handles content input changes', () => {
     render(
       <ArticleForm
         formData={mockFormData}
@@ -108,11 +104,11 @@ describe('ArticleForm Component', () => {
     )
 
     const contentTextarea = screen.getByLabelText('Content')
-    await user.type(contentTextarea, 'Article content here')
+    fireEvent.change(contentTextarea, { target: { value: 'Article content here' } })
 
     expect(mockSetFormData).toHaveBeenCalledWith({
       ...mockFormData,
-      content: 'Article content here'
+      content: 'Article content here',
     })
   })
 

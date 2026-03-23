@@ -108,7 +108,7 @@ jobs:
 
       - name: Run tests with coverage check (100% required)
         run: |
-          docker compose exec -T php bin/phpunit --coverage-clover var/coverage/clover.xml
+          docker compose exec -T -e XDEBUG_MODE=coverage php bin/phpunit --coverage-clover var/coverage/clover.xml
           docker compose exec -T php php coverage-check.php
 
       - name: Upload coverage reports

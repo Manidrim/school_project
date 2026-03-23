@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Security;
 
 use App\Entity\User;
+use App\Tests\Support\ApiAuthTestClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -88,13 +89,7 @@ final class SecurityTest extends WebTestCase
         // Create a regular user
         $user = $this->createUser('user@test.com', ['ROLE_USER']);
 
-        // Login as regular user
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'user@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'user@test.com', 'password123');
 
         $adminEndpoints = [
             '/api/admin',
@@ -126,28 +121,16 @@ final class SecurityTest extends WebTestCase
         ], $this->encodeJsonSafe(['title' => 'Test', 'content' => 'Test']));
         $this->assertResponseStatusCodeSame(401, 'Unauthenticated users should not be able to create articles');
 
-        // Test as regular user
-        $user = $this->createUser('user@test.com', ['ROLE_USER']);
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'user@test.com',
-            'password' => 'password123',
-        ]));
+        $this->createUser('user@test.com', ['ROLE_USER']);
+        ApiAuthTestClient::loginJson($this->client, 'user@test.com', 'password123');
 
         $this->client->request('POST', '/api/articles', [], [], [
             'CONTENT_TYPE' => 'application/ld+json',
         ], $this->encodeJsonSafe(['title' => 'Test', 'content' => 'Test']));
         $this->assertResponseStatusCodeSame(403, 'Regular users should not be able to create articles');
 
-        // Test as admin
-        $admin = $this->createUser('admin@test.com', ['ROLE_ADMIN']);
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]));
+        $this->createUser('admin@test.com', ['ROLE_ADMIN']);
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'password123');
 
         $this->client->request('POST', '/api/articles', [], [], [
             'CONTENT_TYPE' => 'application/ld+json',
@@ -173,13 +156,7 @@ final class SecurityTest extends WebTestCase
         // Create admin user
         $this->createUser('admin@test.com', ['ROLE_ADMIN']);
 
-        // Login
-        $this->client->request('POST', '/api/auth/login', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], $this->encodeJsonSafe([
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]));
+        ApiAuthTestClient::loginJson($this->client, 'admin@test.com', 'password123');
 
         // First protected request
         $this->client->request('GET', '/api/admin');

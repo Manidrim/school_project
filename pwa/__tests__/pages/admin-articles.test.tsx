@@ -378,4 +378,24 @@ describe('Admin Articles Page', () => {
     expect(screen.getByText('Articles Management')).toBeInTheDocument()
     expect(screen.getByText('No articles found.')).toBeInTheDocument()
   })
+
+  it('calls logout when navigation logout is clicked', async () => {
+    const u = userEvent.setup()
+    const mockLogout = jest.fn()
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockArticles),
+    })
+
+    await act(async () => {
+      render(
+        <MockAuthProvider value={{ user: createMockUser(), loading: false, logout: mockLogout }}>
+          <Articles />
+        </MockAuthProvider>,
+      )
+    })
+
+    await u.click(screen.getByRole('button', { name: 'Logout' }))
+    expect(mockLogout).toHaveBeenCalled()
+  })
 })

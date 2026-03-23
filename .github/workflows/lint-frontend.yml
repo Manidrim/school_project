@@ -32,9 +32,21 @@ jobs:
   eslint:
     name: ESLint
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Add swap space
+        run: |
+          SWAPFILE="/swapfile_fe"
+          if [ ! -f "$SWAPFILE" ]; then
+            sudo fallocate -l 2G "$SWAPFILE"
+            sudo chmod 600 "$SWAPFILE"
+            sudo mkswap "$SWAPFILE"
+            sudo swapon "$SWAPFILE"
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -56,17 +68,29 @@ jobs:
         run: docker compose up pwa -d
 
       - name: Install dependencies
-        run: docker compose exec -T pwa pnpm install
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm install
 
       - name: Run ESLint (with --fix)
-        run: docker compose exec -T pwa pnpm lint --fix
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm lint --fix
 
   typescript:
     name: TypeScript Check
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Add swap space
+        run: |
+          SWAPFILE="/swapfile_fe"
+          if [ ! -f "$SWAPFILE" ]; then
+            sudo fallocate -l 2G "$SWAPFILE"
+            sudo chmod 600 "$SWAPFILE"
+            sudo mkswap "$SWAPFILE"
+            sudo swapon "$SWAPFILE"
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -88,17 +112,29 @@ jobs:
         run: docker compose up pwa -d
 
       - name: Install dependencies
-        run: docker compose exec -T pwa pnpm install
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm install
 
       - name: Run TypeScript check
-        run: docker compose exec -T pwa npx tsc --noEmit
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa npx tsc --noEmit
 
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Add swap space
+        run: |
+          SWAPFILE="/swapfile_fe"
+          if [ ! -f "$SWAPFILE" ]; then
+            sudo fallocate -l 2G "$SWAPFILE"
+            sudo chmod 600 "$SWAPFILE"
+            sudo mkswap "$SWAPFILE"
+            sudo swapon "$SWAPFILE"
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -120,10 +156,10 @@ jobs:
         run: docker compose up pwa -d
 
       - name: Install dependencies
-        run: docker compose exec -T pwa pnpm install
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm install
 
       - name: Run tests with coverage check (100% required)
-        run: docker compose exec -T pwa pnpm test:coverage:check
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm test:coverage:check
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3

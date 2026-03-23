@@ -255,6 +255,30 @@ describe('ArticlesList Component', () => {
     expect(draftBadge).toHaveClass('bg-gray-100', 'text-gray-800')
   })
 
+  it('shows unknown author when author is missing', () => {
+    const withoutAuthor = [
+      {
+        id: 9,
+        title: 'Orphan Article',
+        content: 'Short',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+        isPublished: false,
+      },
+    ]
+
+    render(
+      <ArticlesList
+        articles={withoutAuthor}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        onTogglePublish={mockOnTogglePublish}
+      />
+    )
+
+    expect(screen.getByText('Unknown Author')).toBeInTheDocument()
+  })
+
   it('handles articles without lastModifiedBy gracefully', () => {
     const articlesWithoutModifier = [
       {
