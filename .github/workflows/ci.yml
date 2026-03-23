@@ -72,7 +72,7 @@ jobs:
         name: Check API reachability
         run: |
           for i in {1..5}; do
-            if curl -vk --fail-with-body https://localhost; then
+            if curl -vk --fail-with-body https://localhost/docs.jsonld; then
               echo "API check successful"
               break
             elif [ $i -eq 5 ]; then
