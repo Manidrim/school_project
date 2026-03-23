@@ -17,8 +17,10 @@ final class AuthenticationE2ETest extends ApiTestCase
     {
         // Arrange
         $admin = $this->createAdminUser();
+        $email = $admin->getEmail();
+        self::assertNotNull($email);
 
-        ApiAuthTestClient::loginJson($this->client, $admin->getEmail(), 'admin123');
+        ApiAuthTestClient::loginJson($this->client, $email, 'admin123');
 
         $this->assertApiResponseIsSuccessful();
         $this->assertJsonResponse();

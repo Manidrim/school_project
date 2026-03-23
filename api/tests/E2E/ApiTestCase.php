@@ -63,7 +63,9 @@ abstract class ApiTestCase extends WebTestCase
 
     protected function loginAs(User $user, string $password = 'admin123'): void
     {
-        ApiAuthTestClient::loginJson($this->client, $user->getEmail(), $password);
+        $email = $user->getEmail();
+        self::assertNotNull($email);
+        ApiAuthTestClient::loginJson($this->client, $email, $password);
         $this->assertApiResponseIsSuccessful();
     }
 

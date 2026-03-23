@@ -54,7 +54,7 @@ jobs:
         run: docker compose exec -T php composer install --no-interaction
       
       - name: Install PWA dependencies
-        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm install
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa sh -c "cd /srv/app && rm -rf node_modules && pnpm install --frozen-lockfile"
       
       - name: Create test database
         run: docker compose exec -T php bin/console -e test doctrine:database:create

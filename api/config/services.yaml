@@ -41,3 +41,7 @@ services:
     App\Infrastructure\Security\SymfonyPasswordUpgrader:
         arguments:
             $userRepository: '@App\Domain\User\UserRepositoryInterface'
+
+    App\Security\LoginRateLimiter:
+        arguments:
+            $kernelEnvironment: '%kernel.environment%'

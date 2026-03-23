@@ -68,7 +68,7 @@ jobs:
         run: docker compose up pwa -d
 
       - name: Install dependencies
-        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm install
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa sh -c "cd /srv/app && rm -rf node_modules && pnpm install --frozen-lockfile"
 
       - name: Run ESLint (with --fix)
         run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm lint --fix
@@ -112,7 +112,7 @@ jobs:
         run: docker compose up pwa -d
 
       - name: Install dependencies
-        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm install
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa sh -c "cd /srv/app && rm -rf node_modules && pnpm install --frozen-lockfile"
 
       - name: Run TypeScript check
         run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa npx tsc --noEmit
@@ -156,7 +156,7 @@ jobs:
         run: docker compose up pwa -d
 
       - name: Install dependencies
-        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm install
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa sh -c "cd /srv/app && rm -rf node_modules && pnpm install --frozen-lockfile"
 
       - name: Run tests with coverage check (100% required)
         run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm test:coverage:check
