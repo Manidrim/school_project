@@ -1,0 +1,6 @@
+docs_redirect:
+  path: /docs
+  controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController
+  defaults:
+    path: /api/docs
+    permanent: true
