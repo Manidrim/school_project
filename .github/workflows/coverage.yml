@@ -73,7 +73,7 @@ jobs:
           docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm test:coverage:check
       
       - name: Upload PHP coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: always()
         with:
           file: ./api/var/coverage/clover.xml
@@ -82,7 +82,7 @@ jobs:
           fail_ci_if_error: true
       
       - name: Upload Frontend coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: always()
         with:
           file: ./pwa/coverage/lcov.info

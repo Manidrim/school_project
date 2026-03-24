@@ -103,7 +103,7 @@ jobs:
           docker compose exec -T php php coverage-check.php
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: always()
         with:
           file: ./api/var/coverage/clover.xml

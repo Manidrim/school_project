@@ -162,7 +162,7 @@ jobs:
         run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm test:coverage:check
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: always()
         with:
           file: ./pwa/coverage/lcov.info

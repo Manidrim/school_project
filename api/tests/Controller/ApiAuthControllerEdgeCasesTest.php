@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
  * @internal
@@ -81,7 +82,12 @@ final class ApiAuthControllerEdgeCasesTest extends WebTestCase
         $this->userRepository->method('findByEmail')->with('foo@example.com')->willReturn($user);
         $this->passwordHasher->method('isPasswordValid')->willReturn(false);
 
-        $request = new Request(content: (string) \json_encode(['email' => 'foo@example.com', 'password' => 'bad']));
+        $csrfToken = self::getContainer()->get(CsrfTokenManagerInterface::class)->getToken('api_auth')->getValue();
+        $request = new Request(content: (string) \json_encode([
+            'email' => 'foo@example.com',
+            'password' => 'bad',
+            '_csrf_token' => $csrfToken,
+        ]));
 
         $response = $controller->login(
             $request,
@@ -113,7 +119,12 @@ final class ApiAuthControllerEdgeCasesTest extends WebTestCase
         );
         $this->session->expects(self::once())->method('save');
 
-        $request = new Request(content: (string) \json_encode(['email' => 'foo@example.com', 'password' => 'ok']));
+        $csrfToken = self::getContainer()->get(CsrfTokenManagerInterface::class)->getToken('api_auth')->getValue();
+        $request = new Request(content: (string) \json_encode([
+            'email' => 'foo@example.com',
+            'password' => 'ok',
+            '_csrf_token' => $csrfToken,
+        ]));
 
         $response = $controller->login(
             $request,
