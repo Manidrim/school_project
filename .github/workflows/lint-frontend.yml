@@ -70,8 +70,8 @@ jobs:
       - name: Install dependencies
         run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa sh -c "cd /srv/app && rm -rf node_modules && pnpm install --frozen-lockfile"
 
-      - name: Run ESLint (with --fix)
-        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm lint --fix
+      - name: Run ESLint
+        run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm lint
 
   typescript:
     name: TypeScript Check
@@ -162,7 +162,7 @@ jobs:
         run: docker compose exec -T -e NODE_OPTIONS="--max-old-space-size=6144" pwa pnpm test:coverage:check
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: always()
         with:
           file: ./pwa/coverage/lcov.info
