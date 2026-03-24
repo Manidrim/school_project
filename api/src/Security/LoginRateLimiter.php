@@ -1,0 +1,146 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Security;
+
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+final class LoginRateLimiter
+{
+    private const MAX_ATTEMPTS = 5;
+
+    private const WINDOW_SECONDS = 300;
+
+    private const CACHE_DIR = '/tmp/login_rate_limit';
+
+    public function __construct(
+        private readonly string $kernelEnvironment,
+    ) {}
+
+    public function isRateLimited(Request $request): bool
+    {
+        if ($this->kernelEnvironment === 'test') {
+            return false;
+        }
+
+        return $this->hasReachedMaxAttempts($request);
+    }
+
+    public function recordAttempt(Request $request): void
+    {
+        if ($this->kernelEnvironment === 'test') {
+            return;
+        }
+
+        $this->appendAttempt($request);
+    }
+
+    public function createRateLimitedResponse(): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => false,
+            'message' => 'Too many login attempts. Please try again in a few minutes.',
+            'error' => 'rate_limited',
+        ], 429);
+    }
+
+    private function hasReachedMaxAttempts(Request $request): bool
+    {
+        $ip = $request->getClientIp() ?? 'unknown';
+        $key = $this->getCacheKey($ip);
+        $data = $this->readCache($key);
+
+        if ($data === null) {
+            return false;
+        }
+
+        $now = \time();
+        $attempts = \array_filter(
+            $data['attempts'],
+            static fn (int $timestamp): bool => ($now - $timestamp) < self::WINDOW_SECONDS,
+        );
+
+        return \count($attempts) >= self::MAX_ATTEMPTS;
+    }
+
+    private function appendAttempt(Request $request): void
+    {
+        $ip = $request->getClientIp() ?? 'unknown';
+        $key = $this->getCacheKey($ip);
+        $data = $this->readCache($key) ?? ['attempts' => []];
+
+        $now = \time();
+        $data['attempts'][] = $now;
+
+        $data['attempts'] = \array_values(\array_filter(
+            $data['attempts'],
+            static fn (int $timestamp): bool => ($now - $timestamp) < self::WINDOW_SECONDS,
+        ));
+
+        $this->writeCache($key, $data);
+    }
+
+    private function getCacheKey(string $ip): string
+    {
+        return \hash('sha256', $ip);
+    }
+
+    /**
+     * @return array{attempts: list<int>}|null
+     */
+    private function readCache(string $key): ?array
+    {
+        $file = self::CACHE_DIR . '/' . $key;
+
+        if (!\file_exists($file)) {
+            return null;
+        }
+
+        $content = \file_get_contents($file);
+
+        if ($content === false) {
+            return null;
+        }
+
+        $data = \json_decode($content, true);
+
+        if (!$this->isValidCacheData($data)) {
+            return null;
+        }
+
+        /** @var list<int> $attempts */
+        $attempts = \array_values(\array_filter(
+            $data['attempts'],
+            static fn (mixed $value): bool => \is_int($value),
+        ));
+
+        return ['attempts' => $attempts];
+    }
+
+    /**
+     * @phpstan-assert-if-true array{attempts: array<mixed>} $data
+     */
+    private function isValidCacheData(mixed $data): bool
+    {
+        return \is_array($data)
+            && isset($data['attempts'])
+            && \is_array($data['attempts']);
+    }
+
+    /**
+     * @param array{attempts: list<int>} $data
+     */
+    private function writeCache(string $key, array $data): void
+    {
+        if (!\is_dir(self::CACHE_DIR)) {
+            \mkdir(self::CACHE_DIR, 0o700, true);
+        }
+
+        \file_put_contents(
+            self::CACHE_DIR . '/' . $key,
+            \json_encode($data),
+        );
+    }
+}

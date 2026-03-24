@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
+  ...(process.env.NODE_ENV === 'production' && { output: 'standalone' }),
 }
 
 module.exports = nextConfig
