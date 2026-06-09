@@ -34,7 +34,10 @@ final class SymfonyUserAdapter implements UserInterface, PasswordAuthenticatedUs
 
     public function getUserIdentifier(): string
     {
-        return $this->user->getUserIdentifier();
+        $identifier = $this->user->getUserIdentifier();
+        \assert($identifier !== '');
+
+        return $identifier;
     }
 
     public function getPassword(): ?string
