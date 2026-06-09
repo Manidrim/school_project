@@ -14,8 +14,9 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /srv/app
 
+# pnpm 11+ requires Node >= 22; keep in sync with "packageManager" in package.json
 RUN corepack enable && \
-	corepack prepare --activate pnpm@latest && \
+	corepack prepare --activate pnpm@9.1.3 && \
 	pnpm config -g set store-dir /.pnpm-store
 
 # Next.js collects completely anonymous telemetry data about general usage.
