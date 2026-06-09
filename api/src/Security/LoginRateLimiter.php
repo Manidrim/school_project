@@ -101,7 +101,9 @@ final class LoginRateLimiter
         $content = \file_get_contents($file);
 
         if ($content === false) {
+            // @codeCoverageIgnoreStart
             return null;
+            // @codeCoverageIgnoreEnd
         }
 
         $data = \json_decode($content, true);

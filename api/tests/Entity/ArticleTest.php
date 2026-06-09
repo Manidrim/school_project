@@ -35,6 +35,7 @@ final class ArticleTest extends TestCase
         self::assertInstanceOf(\DateTimeImmutable::class, $article->getCreatedAt());
         self::assertInstanceOf(\DateTimeImmutable::class, $article->getUpdatedAt());
         self::assertFalse($article->isPublished());
+        self::assertFalse($article->getIsPublished());
     }
 
     public function testSetAndGetTitle(): void

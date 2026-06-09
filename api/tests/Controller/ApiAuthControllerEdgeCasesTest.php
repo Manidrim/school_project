@@ -7,6 +7,7 @@ namespace App\Tests\Controller;
 use App\Controller\ApiAuthController;
 use App\Domain\User\UserRepositoryInterface;
 use App\Entity\User;
+use App\Security\LoginRateLimiter;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -101,6 +102,69 @@ final class ApiAuthControllerEdgeCasesTest extends WebTestCase
         );
 
         self::assertSame(401, $response->getStatusCode());
+    }
+
+    public function testLoginWhenRateLimitedReturns429(): void
+    {
+        $ip = '198.51.100.42';
+        $cacheFile = '/tmp/login_rate_limit/' . \hash('sha256', $ip);
+
+        try {
+            $rateLimiter = new LoginRateLimiter('prod');
+            $request = Request::create('/api/auth/login', 'POST', server: ['REMOTE_ADDR' => $ip], content: '{}');
+
+            for ($i = 0; $i < 5; ++$i) {
+                $rateLimiter->recordAttempt($request);
+            }
+
+            $controller = new ApiAuthController(
+                $rateLimiter,
+                $this->createMock(CsrfTokenManagerInterface::class),
+            );
+
+            $response = $controller->login(
+                $request,
+                $this->userRepository,
+                $this->passwordHasher,
+                $this->tokenStorage,
+                $this->session,
+            );
+
+            self::assertSame(429, $response->getStatusCode());
+        } finally {
+            if (\file_exists($cacheFile)) {
+                \unlink($cacheFile);
+            }
+        }
+    }
+
+    public function testLoginWithInvalidCsrfTokenReturns403(): void
+    {
+        $controller = self::getContainer()->get(ApiAuthController::class);
+        $user = new User('foo@example.com', ['ROLE_USER'], 'hashed');
+
+        $this->userRepository->method('findByEmail')->willReturn($user);
+        $this->passwordHasher->method('isPasswordValid')->willReturn(true);
+
+        $this->generateCsrfToken();
+        $request = new Request(content: (string) \json_encode([
+            'email' => 'foo@example.com',
+            'password' => 'ok',
+            '_csrf_token' => 'not-the-real-token',
+        ]));
+
+        $response = $controller->login(
+            $request,
+            $this->userRepository,
+            $this->passwordHasher,
+            $this->tokenStorage,
+            $this->session,
+        );
+
+        self::assertSame(403, $response->getStatusCode());
+        $data = \json_decode((string) $response->getContent(), true);
+        self::assertIsArray($data);
+        self::assertSame('csrf_token_invalid', $data['error'] ?? null);
     }
 
     public function testLoginWithValidCredentialsCreatesTokenAndReturnsSuccess(): void
