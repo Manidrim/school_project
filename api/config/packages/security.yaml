@@ -14,10 +14,11 @@ security:
             security: false
 
         api:
-            pattern: ^/api
-            stateless: true
+            pattern: ^/api/
+            stateless: false
             provider: app_user_provider
             entry_point: App\Security\ApiAuthenticationEntryPoint
+            context: main
 
         main:
             lazy: true
@@ -37,9 +38,12 @@ security:
 
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/csrf-token, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth, roles: PUBLIC_ACCESS }
         - { path: ^/api/admin, roles: ROLE_ADMIN, methods: [GET, POST, PUT, DELETE, PATCH] }
         - { path: ^/api/admin, roles: PUBLIC_ACCESS, methods: [OPTIONS] }
+        - { path: ^/api/articles, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE, PATCH] }
+        - { path: ^/api/articles, roles: PUBLIC_ACCESS, methods: [GET, OPTIONS] }
         - { path: ^/admin, roles: ROLE_ADMIN }
 
 when@test:

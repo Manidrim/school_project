@@ -2,3 +2,11 @@
 /helm/api-platform/charts/*
 !/helm/api-platform/charts/.gitignore
 .idea
+
+# Security: never commit session/cookie files
+cookies.txt
+login_cookies.txt
+*.cookies
+
+# Dev scripts
+fix_phpstan.sh

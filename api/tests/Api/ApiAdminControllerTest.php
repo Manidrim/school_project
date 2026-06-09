@@ -47,7 +47,7 @@ final class ApiAdminControllerTest extends WebTestCase
             'HTTP_ACCEPT' => 'application/json',
         ]);
 
-        $this->assertResponseStatusCodeSame(401);
+        $this->assertResponseStatusCodeSame(401); // Authentication required
     }
 
     public function testDashboardWithAuthentication(): void

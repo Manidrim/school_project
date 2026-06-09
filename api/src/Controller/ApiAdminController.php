@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 final class ApiAdminController extends AbstractController
 {
     #[Route('', name: 'api_admin_dashboard', methods: ['GET', 'OPTIONS'])]
-    public function dashboard(Request $request): JsonResponse
+    public function dashboard(Request $request, UserRepositoryInterface $userRepository): JsonResponse
     {
         if ($request->getMethod() === 'OPTIONS') {
             return new JsonResponse(null, 204);
@@ -58,7 +58,7 @@ final class ApiAdminController extends AbstractController
                 ],
             ],
             'stats' => [
-                'total_users' => 2,
+                'total_users' => \count($userRepository->findAll()),
                 'last_login' => \date('Y-m-d H:i:s'),
             ],
         ]);
@@ -85,6 +85,7 @@ final class ApiAdminController extends AbstractController
         }
 
         return new JsonResponse([
+            'title' => 'User Management',
             'users' => $usersData,
             'total' => \count($usersData),
         ]);
@@ -100,11 +101,17 @@ final class ApiAdminController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         return new JsonResponse([
+            'title' => 'Content Management',
             'message' => 'Content management endpoint',
-            'content_types' => [
+            'content' => [
                 ['id' => 'posts', 'name' => 'Blog Posts', 'count' => 0],
                 ['id' => 'pages', 'name' => 'Static Pages', 'count' => 0],
                 ['id' => 'media', 'name' => 'Media Files', 'count' => 0],
+            ],
+            'content_types' => [
+                ['id' => 'article', 'title' => 'Articles'],
+                ['id' => 'page', 'title' => 'Pages'],
+                ['id' => 'media', 'title' => 'Media'],
             ],
         ]);
     }
@@ -119,6 +126,7 @@ final class ApiAdminController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         return new JsonResponse([
+            'title' => 'System Settings',
             'message' => 'System settings endpoint',
             'settings' => [
                 ['key' => 'site_name', 'value' => 'My Blog', 'type' => 'text'],

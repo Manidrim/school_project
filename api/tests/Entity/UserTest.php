@@ -20,6 +20,19 @@ final class UserTest extends TestCase
         self::assertNull($user->getId());
     }
 
+    public function testConstructorSetsPropertiesCorrectly(): void
+    {
+        $email = 'test@example.com';
+        $roles = ['ROLE_ADMIN'];
+        $password = 'password123';
+
+        $user = new User($email, $roles, $password);
+
+        self::assertSame($email, $user->getEmail());
+        self::assertContains('ROLE_ADMIN', $user->getRoles());
+        self::assertSame($password, $user->getPassword());
+    }
+
     public function testSetAndGetEmail(): void
     {
         $user = new User();
