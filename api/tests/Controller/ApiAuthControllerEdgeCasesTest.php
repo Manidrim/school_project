@@ -11,7 +11,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
@@ -82,7 +85,7 @@ final class ApiAuthControllerEdgeCasesTest extends WebTestCase
         $this->userRepository->method('findByEmail')->with('foo@example.com')->willReturn($user);
         $this->passwordHasher->method('isPasswordValid')->willReturn(false);
 
-        $csrfToken = self::getContainer()->get(CsrfTokenManagerInterface::class)->getToken('api_auth')->getValue();
+        $csrfToken = $this->generateCsrfToken();
         $request = new Request(content: (string) \json_encode([
             'email' => 'foo@example.com',
             'password' => 'bad',
@@ -119,7 +122,7 @@ final class ApiAuthControllerEdgeCasesTest extends WebTestCase
         );
         $this->session->expects(self::once())->method('save');
 
-        $csrfToken = self::getContainer()->get(CsrfTokenManagerInterface::class)->getToken('api_auth')->getValue();
+        $csrfToken = $this->generateCsrfToken();
         $request = new Request(content: (string) \json_encode([
             'email' => 'foo@example.com',
             'password' => 'ok',
@@ -141,5 +144,24 @@ final class ApiAuthControllerEdgeCasesTest extends WebTestCase
         self::assertIsArray($data);
         self::assertIsArray($data['user'] ?? null);
         self::assertSame('foo@example.com', $data['user']['email'] ?? null);
+    }
+
+    /**
+     * The real CsrfTokenManager stores tokens in the session of the current
+     * request, so one must be pushed onto the request stack first.
+     */
+    private function generateCsrfToken(): string
+    {
+        $sessionRequest = new Request();
+        $sessionRequest->setSession(new Session(new MockArraySessionStorage()));
+
+        $requestStack = self::getContainer()->get(RequestStack::class);
+        \assert($requestStack instanceof RequestStack);
+        $requestStack->push($sessionRequest);
+
+        $tokenManager = self::getContainer()->get(CsrfTokenManagerInterface::class);
+        \assert($tokenManager instanceof CsrfTokenManagerInterface);
+
+        return $tokenManager->getToken('api_auth')->getValue();
     }
 }
