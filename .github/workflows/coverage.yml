@@ -75,7 +75,7 @@ jobs:
       # Codecov upload needs the CODECOV_TOKEN secret; it must not fail CI
       # when the secret is absent — the 100% gate above is what matters.
       - name: Upload PHP coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         if: always()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -85,7 +85,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload Frontend coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         if: always()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
